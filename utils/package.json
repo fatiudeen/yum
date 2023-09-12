@@ -1,6 +1,6 @@
 {
   "name": "@yumm/utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "utils component of yumm",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,6 +19,7 @@
     "@types/express": "^4.17.17",
     "@types/winston": "^2.4.4",
     "crypto": "^1.0.1",
+    "del-cli": "^5.1.0",
     "typescript": "^5.2.2"
   }
 }
