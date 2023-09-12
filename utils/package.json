@@ -1,6 +1,6 @@
 {
   "name": "@yumm/utils",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "utils component of yumm",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,7 +8,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "clean": "del ./build/*",
+    "clean": "del ./dist/*",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run clean && tsc",
     "pub": "git add . && git commit -m \"Updates\" && npm version patch && npm run build && npm publish"
