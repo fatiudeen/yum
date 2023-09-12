@@ -1,6 +1,6 @@
 {
   "name": "@yumm/utils",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "utils component of yumm",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
