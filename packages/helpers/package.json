@@ -1,7 +1,7 @@
 {
-  "name": "@yumm/utils",
-  "version": "1.0.5",
-  "description": "utils component of yumm",
+  "name": "@yumm/helpers",
+  "version": "1.0.0",
+  "description": "helpers component of yumm",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -17,12 +17,16 @@
   "license": "MIT",
   "devDependencies": {
     "@types/express": "^4.17.17",
-    "@types/winston": "^2.4.4",
-    "crypto": "^1.0.1",
-    "del-cli": "^5.1.0",
+    "@types/mongoose": "^5.11.97",
+    "@types/nodemailer": "^6.4.10",
     "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@types/uuid": "^9.0.4",
+    "@yumm/utils": "^1.0.6",
+    "http-status": "^1.7.0"
   }
 }
