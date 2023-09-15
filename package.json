@@ -7,13 +7,13 @@
     ],
     "author": "fatiudeen",
     "license": "MIT",
-    "version": "0.0.0",
+    "version": "0.0.2",
     "scripts": {
         "clean": "del ./dist/*",
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "npm run clean && tsc",
         "deps:install": "npm i @yumm/utils",
-        "pub": "npm run deps:install && git add . && git commit -m \"update\" && npm version patch && npm run build && npm publish"
+        "pub": "npm run deps:install && git add . --exclude=packages/ && git commit -m \"update\" && npm version patch && npm run build && npm publish"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^6.7.0",
