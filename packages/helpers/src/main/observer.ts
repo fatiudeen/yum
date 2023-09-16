@@ -1,7 +1,3 @@
-/* eslint-disable no-empty-function */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-use-before-define */
-
 import { logger } from '@yumm/utils';
 
 /* eslint-disable no-useless-constructor */

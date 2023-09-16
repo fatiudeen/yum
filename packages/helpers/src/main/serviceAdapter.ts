@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import axios, { AxiosError } from 'axios';
-import { logger } from '@utils/logger';
+import { logger } from '@yumm/utils';
 
 type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 

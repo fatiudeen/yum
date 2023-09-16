@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { logger } from '@yumm/utils';
-import seeder from './seeder';
+// import seeder from './seeder';
 
 export default async (connectionString: string, useSeeder = false) => {
   try {
@@ -10,7 +10,7 @@ export default async (connectionString: string, useSeeder = false) => {
     await mongoose.connect(connectionString);
     logger.info('database connected');
     if (useSeeder) {
-      await seeder();
+      // await seeder();
       logger.info('admin seeded');
     }
   } catch (error) {
