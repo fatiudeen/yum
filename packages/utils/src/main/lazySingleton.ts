@@ -1,5 +1,5 @@
-export function lazySingleton<T, C extends new (...args: any[]) => T>(obj: C) {
-  const instance = (...args: ConstructorParameters<C>): T => {
+export function lazySingleton<T, A extends Array<any>>(obj: new (...args: A) => T) {
+  const instance = (...args: A): T => {
     const _obj = obj as unknown as { _instance: null | T } & (new () => T);
     if (_obj._instance) {
       return _obj._instance;
@@ -10,7 +10,5 @@ export function lazySingleton<T, C extends new (...args: any[]) => T>(obj: C) {
   if (!('_instance' in obj)) {
     Object.assign(obj, { _instance: null, instance });
   }
-  return (<{ _instance: null | T; instance: typeof instance } & (new (...args: ConstructorParameters<C>) => T)>(
-    (<unknown>obj)
-  )).instance;
+  return (<{ _instance: null | T; instance: typeof instance } & (new (...args: A) => T)>obj).instance;
 }
