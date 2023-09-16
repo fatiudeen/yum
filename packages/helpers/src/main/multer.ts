@@ -29,9 +29,9 @@ enum Service {
 
 type Options = awsConfig | digitalOceanConfig | diskConfig;
 export class Multer {
-  private s3: clientS3.S3Client;
+  private s3?: clientS3.S3Client;
   private storage: multer.StorageEngine;
-  private s3config: clientS3.S3ClientConfig;
+  private s3config?: clientS3.S3ClientConfig;
   private message: string;
   public storageType: Service = Service.MEMORY;
   private useS3: boolean;
