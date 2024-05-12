@@ -4,11 +4,8 @@
     "rootDir": "./src", 
     "outDir": "./dist",
     "declarationDir": "./dist", 
-  //   "typeRoots": [
-  //     "./node_modules/@types",
-  //     "./packages/core/src/interfaces/@types"
-  // ],        
+    "baseUrl": "./"     
   },
-  "include": ["src/index.ts"],
+  "include": ["src"],
   "exclude": []
 }

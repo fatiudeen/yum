@@ -1,6 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-// import { UserInterface } from '@interfaces/User.Interface';
 import { Server } from 'socket.io';
 
 type UserInterface = {};
