@@ -1,9 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "target": "ESNext",
     "rootDir": "./src", 
     "outDir": "./dist",
     "declarationDir": "./dist", 
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     // "target": "ES2021",
     "lib": ["ES2021.String"]
   },

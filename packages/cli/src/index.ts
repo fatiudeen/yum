@@ -1,3 +1,5 @@
+#!/usr/bin/env/ node
+
 import { program } from 'commander';
 import { createProject } from './main/setup';
 import { fixLint, removeCrud, newCrud } from './main/generateFiles';
