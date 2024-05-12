@@ -7,13 +7,13 @@
     ],
     "author": "fatiudeen",
     "license": "MIT",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "scripts": {
         "clean": "del ./dist/*",
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "npm run clean && tsc",
-        "deps:install": "npm i @yumm/utils @yumm/helpers",
-        "pub": "npm run deps:install && git add ./ --exclude=packages/ && git commit -m \"update\" && npm version patch && npm run build && npm publish"
+        "deps:install": "npm i @yumm/utils @yumm/helpers @yumm/core",
+        "pub": "npm run deps:install && git add ./ && git commit -m \"update\" && npm version patch && npm run build && npm publish"
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",
@@ -24,12 +24,13 @@
         "eslint-plugin-prettier": "^5.0.0"
     },
     "dependencies": {
-        "@yumm/helpers": "^1.0.2",
-        "@yumm/utils": "^1.0.6",
-        "zod": "^3.22.4"
+        "@yumm/core": "^0.0.2",
+        "@yumm/helpers": "^1.0.6",
+        "@yumm/utils": "^1.0.11",
+        "zod": "*"
     },
     "peerDependencies": {
         "dotenv": "*",
         "zod": "*"
-      }    
+    }
 }
