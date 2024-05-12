@@ -4,6 +4,8 @@
     "rootDir": "./src", 
     "outDir": "./dist",
     "declarationDir": "./dist", 
+    // "target": "ES2021",
+    "lib": ["ES2021.String"]
   },
   "include": ["src/index.ts"],
   "exclude": []
