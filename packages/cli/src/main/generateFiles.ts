@@ -1,8 +1,6 @@
 import fs from 'fs';
 import nodePath from 'path';
-import { program } from 'commander';
 import { exec } from 'child_process';
-import { URL } from 'url';
 
 // Define content and path mappings for each keyword
 const paths = {
@@ -290,51 +288,45 @@ function getAllFilesInDir(ignore: string[] = []) {
   }
 }
 
-program
-  .command('new')
-  .arguments('<keyword>')
-  .action((keyword) => {
-    keyword = keyword.toLowerCase();
-    const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-    let _paths = '';
-    for (const [path, content] of Object.entries(paths)) {
-      const _path = path.replace('<keyword>', keyword).replace('<Keyword>', Keyword);
-      createFile(_path, content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
-      _paths = `${_paths} ${_path}`;
+export const newCrud = (keyword: string) => {
+  keyword = keyword.toLowerCase();
+  const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+  let _paths = '';
+  for (const [path, content] of Object.entries(paths)) {
+    const _path = path.replace('<keyword>', keyword).replace('<Keyword>', Keyword);
+    createFile(_path, content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
+    _paths = `${_paths} ${_path}`;
+  }
+  updateAppTs(keyword, Keyword);
+
+  // eslint-disable-next-line no-unused-vars
+  exec(`npm run prettier -- ${_paths} src/api/v1/app.ts`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error Formatting Files: ${error}`);
+      return;
     }
-    updateAppTs(keyword, Keyword);
-
-    // eslint-disable-next-line no-unused-vars
-    exec(`npm run prettier -- ${_paths} src/api/v1/app.ts`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error Formatting Files: ${error}`);
-        return;
-      }
-      console.log(`Files Formatted: ${stdout}`);
-    });
+    console.log(`Files Formatted: ${stdout}`);
   });
+};
 
-program
-  .command('rm')
-  .arguments('<keyword>')
-  .action((keyword) => {
-    keyword = keyword.toLowerCase();
-    const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-    for (const path of Object.keys(paths)) {
-      removeFile(path.replace('<keyword>', keyword).replace('<Keyword>', Keyword));
+export const removeCrud = (keyword: string) => {
+  keyword = keyword.toLowerCase();
+  const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+  for (const path of Object.keys(paths)) {
+    removeFile(path.replace('<keyword>', keyword).replace('<Keyword>', Keyword));
+  }
+  updateAppTs(keyword, Keyword, true);
+  // eslint-disable-next-line no-unused-vars
+  exec(`npm run prettier -- src/api/v1/app.ts`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error Formatting Files: ${error}`);
+      return;
     }
-    updateAppTs(keyword, Keyword, true);
-    // eslint-disable-next-line no-unused-vars
-    exec(`npm run prettier -- src/api/v1/app.ts`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error Formatting Files: ${error}`);
-        return;
-      }
-      console.log(`Files Formatted: ${stdout}`);
-    });
+    console.log(`Files Formatted: ${stdout}`);
   });
+};
 
-program.command('fix').action(() => {
+export const fixLint = () => {
   const ignoreFiles = ['IdPlugin, AuthSession'];
   console.log();
 
@@ -348,6 +340,4 @@ program.command('fix').action(() => {
       console.log(`Files Fixed: ${stdout}`);
     });
   }
-});
-
-program.parse(process.argv);
+};
