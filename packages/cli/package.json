@@ -1,0 +1,28 @@
+{
+  "name": "@yumm/cli",
+  "version": "0.0.0",
+  "description": "cli component of yumm",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "clean": "del ./dist/*",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run clean && tsc",
+    "pub": "git add ./ && git commit -m \"update\" && npm version patch && npm run build && npm publish"
+  },
+  "author": "fatiudeen",
+  "license": "MIT",
+  "devDependencies": {
+    "del-cli": "^5.1.0",
+    "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "commander": "^12.0.0"
+  }
+}
