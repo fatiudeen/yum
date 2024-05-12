@@ -1,37 +1,31 @@
-/* eslint-disable indent */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-restricted-syntax */
-import { Request, Response, NextFunction } from "express";
-// import { logger } from '@utils/logger';
-// import httpResponse from '@helpers/HttpResponse';
-// import Service from '@services/service';
-// import httpError from '@helpers/HttpError';
-// import Multer from '@helpers/multer';
-// import safeQuery from '@utils/safeQuery';
-// import httpStatus from 'http-status';
-// import { OPTIONS } from '@config';
+import { Request, Response, NextFunction } from 'express';
+import { logger, safeQuery } from '@yumm/utils';
+import Service from './service';
+import { HttpError, HttpResponse } from '.';
+import { Multer } from '@yumm/helpers';
+import httpStatus from 'http-status';
+import { OPTIONS } from '../config';
 
 export default abstract class Controller<T> {
-  protected HttpError = httpError;
-  protected HttpResponse = httpResponse;
-  protected resource;
-  protected resourceId;
+  protected HttpError = HttpError;
+  protected HttpResponse = HttpResponse;
+  protected resource: string;
+  protected resourceId: string;
   abstract service: Service<T, any>;
   readonly fileProcessor = OPTIONS.USE_MULTER ? Multer : null;
   abstract responseDTO?: Function;
   protected processFile = (req: Request) => {
     if (!this.fileProcessor) return;
-    let multerFile!: "path" | "location" | "buffer";
-    if (this.fileProcessor.storageType === "disk") {
-      multerFile = "path";
-    } else if (this.fileProcessor.storageType === "memory") {
+    let multerFile!: 'path' | 'location' | 'buffer';
+    if (this.fileProcessor.storageType === 'disk') {
+      multerFile = 'path';
+    } else if (this.fileProcessor.storageType === 'memory') {
       if (req.file) {
         // const base64String = Buffer.from(req.file.buffer).toString('base64');
-        multerFile = "buffer";
+        multerFile = 'buffer';
       }
     } else {
-      multerFile = "location";
+      multerFile = 'location';
     }
     if (req.file) {
       if (!req.file.fieldname) return;
@@ -69,14 +63,9 @@ export default abstract class Controller<T> {
         if (result.redirect) {
           return res.redirect(result.redirectUri);
         }
-        const status =
-          req.method === "POST" ? httpStatus.CREATED : httpStatus.OK;
+        const status = req.method === 'POST' ? httpStatus.CREATED : httpStatus.OK;
         responseDTO = responseDTO || this.responseDTO;
-        this.HttpResponse.send(
-          res,
-          responseDTO ? responseDTO(result) : result,
-          status
-        );
+        this.HttpResponse.send(res, responseDTO ? responseDTO(result) : result, status);
       } catch (error) {
         logger.error([error]);
         next(error);
@@ -101,7 +90,7 @@ export default abstract class Controller<T> {
             limit?: string | number | undefined;
           }
         >
-      >safeQuery(req)
+      >safeQuery(req),
     );
   });
 
@@ -113,10 +102,7 @@ export default abstract class Controller<T> {
 
   update = this.control(async (req: Request) => {
     this.processFile(req);
-    const result = await this.service.update(
-      req.params[this.resourceId],
-      req.body
-    );
+    const result = await this.service.update(req.params[this.resourceId], req.body);
 
     if (!result) throw new this.HttpError(`${this.resource} not found`, 404);
     return result;
