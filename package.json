@@ -7,7 +7,7 @@
     ],
     "author": "fatiudeen",
     "license": "MIT",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "scripts": {
         "clean": "del ./dist/*",
         "test": "echo \"Error: no test specified\" && exit 1",
