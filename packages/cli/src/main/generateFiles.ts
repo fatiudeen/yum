@@ -263,7 +263,7 @@ function removeFile(filePath: fs.PathLike) {
   try {
     fs.unlinkSync(filePath);
     console.log(`Removed ${filePath}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error removing ${filePath}:`, error.message);
   }
 }
