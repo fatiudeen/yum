@@ -27,7 +27,7 @@ export enum BucketService {
   DISK = 'disk',
 }
 
-type Options = awsConfig | digitalOceanConfig | diskConfig;
+export type FileUploadOptions = awsConfig | digitalOceanConfig | diskConfig;
 export class FileUploader {
   private s3?: clientS3.S3Client;
   private storage: multer.StorageEngine;
@@ -38,7 +38,7 @@ export class FileUploader {
 
   constructor(
     private service: BucketService,
-    private opts: Options,
+    private opts: FileUploadOptions,
   ) {
     this.storageType = this.service;
     this.useS3 = this.service === BucketService.AWS_S3 || this.service === BucketService.DIGITALOCEAN_SPACE;
