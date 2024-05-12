@@ -1,7 +1,5 @@
-/* eslint-disable no-lone-blocks */
-declare module 'xss-clean';
-{
-  function value(): Function;
+declare module 'xss-clean' {
+  function value(): () => any;
 
   export default value;
 }

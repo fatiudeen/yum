@@ -3,7 +3,11 @@
   "compilerOptions": {
     "rootDir": "./src", 
     "outDir": "./dist",
-    "declarationDir": "./@types", 
+    "declarationDir": "./dist", 
+  //   "typeRoots": [
+  //     "./node_modules/@types",
+  //     "./packages/core/src/interfaces/@types"
+  // ],        
   },
   "include": ["src/index.ts"],
   "exclude": []

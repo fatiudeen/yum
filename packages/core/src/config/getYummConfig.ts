@@ -59,3 +59,4 @@ const rcPath = find('yummConfig.json');
 
 // Read the contents as json
 export const yummConfig = json(rcPath);
+export const ROOT_PATH = path.dirname(yummConfig);
