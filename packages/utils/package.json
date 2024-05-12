@@ -1,6 +1,6 @@
 {
   "name": "@yumm/utils",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "utils component of yumm",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +11,7 @@
     "clean": "del ./dist/*",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run clean && tsc",
-    "pub": "git add ./ && git commit -m \"update\" && npm version patch && npm run build && npm publish"
+    "pub": "npm version patch && git add ./ && git commit -m \"update\" &&  npm run build && npm publish"
   },
   "author": "fatiudeen",
   "license": "MIT",
