@@ -19,7 +19,7 @@ type digitalOceanConfig = awsConfig & {
 
 type diskConfig = { rootPath: string };
 
-enum Service {
+export enum BucketService {
   AWS_S3 = 's3',
   DIGITALOCEAN_SPACE = 'spaces',
   CLOUDINARY = 'cloudinary',
@@ -28,20 +28,20 @@ enum Service {
 }
 
 type Options = awsConfig | digitalOceanConfig | diskConfig;
-export class Multer {
+export class FileUploader {
   private s3?: clientS3.S3Client;
   private storage: multer.StorageEngine;
   private s3config?: clientS3.S3ClientConfig;
   private message: string;
-  public storageType: Service = Service.MEMORY;
+  public storageType: BucketService = BucketService.MEMORY;
   private useS3: boolean;
 
   constructor(
-    private service: Service,
+    private service: BucketService,
     private opts: Options,
   ) {
     this.storageType = this.service;
-    this.useS3 = this.service === Service.AWS_S3 || this.service === Service.DIGITALOCEAN_SPACE;
+    this.useS3 = this.service === BucketService.AWS_S3 || this.service === BucketService.DIGITALOCEAN_SPACE;
     if (this.useS3) {
       const options = this.opts as digitalOceanConfig;
       this.s3config = {
@@ -51,7 +51,7 @@ export class Multer {
         },
       };
       // this.storageType = StorageType.CLOUD;
-      if (this.service === Service.DIGITALOCEAN_SPACE) {
+      if (this.service === BucketService.DIGITALOCEAN_SPACE) {
         this.s3config.endpoint = <any>new Endpoint(options.digitaloceanEndpoint);
         this.message = 'FILE_STORAGE: using digital ocean space';
       } else {
@@ -71,7 +71,7 @@ export class Multer {
           cb(null, Date.now().toString());
         },
       });
-    } else if (this.service === Service.DISK) {
+    } else if (this.service === BucketService.DISK) {
       const options = this.opts as diskConfig;
       this.message = `FILE_STORAGE: using disk storage location: ${options.rootPath}`;
       this.storage = multer.diskStorage({
@@ -127,7 +127,7 @@ export class Multer {
   }
 
   async deleteObject(key: string | clientS3.ObjectIdentifier[]) {
-    if (this.service === Service.DISK) {
+    if (this.service === BucketService.DISK) {
       const options = this.opts as diskConfig;
       if (typeof key === 'string') {
         return fsAsync.unlink(`${options.rootPath}/${key}`);

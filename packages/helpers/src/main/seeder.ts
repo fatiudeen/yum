@@ -1,11 +1,11 @@
-// import { SEEDER_EMAIL, SEEDER_PASSWORD } from '@config';
+// // import { SEEDER_EMAIL, SEEDER_PASSWORD } from '@config';
 // import { UserInterface } from '@interfaces/User.Interface';
 // import UserRepository from '@repositories/User.repository';
 // import { logger } from '@utils/logger';
 
 // export default async () => {
-//   const defaultEmail = SEEDER_EMAIL;
-//   const defaultPassword = SEEDER_PASSWORD;
+//   const defaultEmail = global.ENV.SEEDER_EMAIL;
+//   const defaultPassword = global.ENV.SEEDER_PASSWORD;
 //   const authService = new UserRepository();
 
 //   try {

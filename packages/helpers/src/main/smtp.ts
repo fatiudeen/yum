@@ -12,7 +12,7 @@ type Opts = {
   domainEmail: string;
 };
 
-export class Mailer {
+export class SMTPMailer {
   private transporter: nodeMailer.Transporter<SMTPTransport.SentMessageInfo>;
 
   constructor(private options: Opts) {
