@@ -1,6 +1,7 @@
 /* eslint-disable import/no-dynamic-require */
 import { config } from 'dotenv';
 import { yummConfig } from './getYummConfig';
+import { BucketService, FileUploadOptions } from '@yumm/helpers';
 
 if (process.env.NODE_ENV === 'development') {
   config({ path: '.env.dev' });
@@ -61,7 +62,7 @@ export const {
   MULTER_STORAGE_PATH,
   NODE_ENV,
   REDIS_URI,
-  ODDS_JAM_API_KEY,
+  DIGITALOCEAN_SPACE_ENDPOINT,
 } = <Record<string, string>>process.env;
 
 export const OPTIONS: {
@@ -70,20 +71,23 @@ export const OPTIONS: {
   USE_SOCKETS: boolean;
   USE_AUTH_SESSIONS: boolean; // one user can log in at a time
   USE_REFRESH_TOKEN: boolean;
-  USE_MULTER: boolean; // using multer without s3 or disk storage set default storage to memoryStorage
-  USE_S3: boolean;
-  USE_DIGITALOCEAN_SPACE: boolean; // s3 must be true to use this
-  USE_MULTER_DISK_STORAGE: boolean; // s3 and USE_DIGITALOCEAN_SPACE  must be false to use this
+  USE_FILE_UPLOADER: boolean; // using multer without s3 or disk storage set default storage to memoryStorage
+  // USE_S3: boolean;
+  // USE_DIGITALOCEAN_SPACE: boolean; // s3 must be true to use this
+  // USE_MULTER_DISK_STORAGE: boolean; // s3 and USE_DIGITALOCEAN_SPACE  must be false to use this
   USE_OAUTH_GOOGLE: boolean;
   USE_OAUTH_FACEBOOK: boolean;
   USE_OAUTH_APPLE: boolean;
   USE_PAYSTACK: boolean;
   USE_ANALYTICS: boolean;
-  USE_REDIS: boolean;
+  // USE_REDIS: boolean;
   USE_DATABASE: 'mongodb' | 'postgresql' | 'sqlite';
   DIGITALOCEAN_SPACE_ENDPOINT: 'nyc3.digitaloceanspaces.com';
+  BUCKET_SERVICE: BucketService | undefined;
   // eslint-disable-next-line global-require
 } = yummConfig;
+
+export var BUCKET_CONFIG: FileUploadOptions | undefined;
 
 export function optionsValidation() {
   if (!PORT || !DB_URI || !JWT_KEY || !JWT_TIMEOUT) {
@@ -101,52 +105,86 @@ export function optionsValidation() {
     }
   }
 
-  if (OPTIONS.USE_REDIS) {
-    if (!REDIS_URI) {
-      throw Error('missing env config options: REDIS_URI');
-    }
-  }
+  // if (OPTIONS.USE_REDIS) {
+  //   if (!REDIS_URI) {
+  //     throw Error('missing env config options: REDIS_URI');
+  //   }
+  // }
 
   if (OPTIONS.USE_PAYSTACK) {
     if (!PAYSTACK_SECRET) {
       throw Error('missing env config options: PAYSTACK_SECRET');
     }
   }
+  if (OPTIONS.USE_FILE_UPLOADER) {
+    if (OPTIONS.BUCKET_SERVICE) {
+      const result = (function (val: BucketService) {
+        let res: FileUploadOptions | undefined;
+        switch (val) {
+          case BucketService.AWS_S3:
+            if (!AWS_BUCKET_NAME || !AWS_REGION || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
+              throw new Error(
+                'missing env config options: AWS_BUCKET_NAME, AWS_REGION, AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY',
+              );
+            }
+            res = {
+              bucket: AWS_BUCKET_NAME,
+              region: AWS_REGION,
+              accessKeyId: AWS_ACCESS_KEY_ID,
+              secretAccessKey: AWS_SECRET_ACCESS_KEY,
+            };
+            break;
+          // case BucketService.CLOUDINARY:
+          //   res = {};
+          //   break
+          case BucketService.DIGITALOCEAN_SPACE:
+            if (
+              !AWS_BUCKET_NAME ||
+              !AWS_REGION ||
+              !AWS_ACCESS_KEY_ID ||
+              !AWS_SECRET_ACCESS_KEY ||
+              !DIGITALOCEAN_SPACE_ENDPOINT
+            ) {
+              throw new Error(
+                'missing env config options: AWS_BUCKET_NAME, AWS_REGION, AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY',
+              );
+            }
+            res = {
+              bucket: AWS_BUCKET_NAME,
+              region: AWS_REGION,
+              accessKeyId: AWS_ACCESS_KEY_ID,
+              secretAccessKey: AWS_SECRET_ACCESS_KEY,
+              digitaloceanEndpoint: DIGITALOCEAN_SPACE_ENDPOINT,
+            };
+            break;
 
-  if (OPTIONS.USE_MULTER_DISK_STORAGE) {
-    if (!OPTIONS.USE_MULTER) {
-      throw new Error('USE_MULTER option must be set to true to use USE_MULTER_DISK_STORAGE');
-    }
-
-    if (OPTIONS.USE_DIGITALOCEAN_SPACE || OPTIONS.USE_S3) {
-      throw new Error('USE_S3 and USE_DIGITALOCEAN_SPACE option must be set to false to use USE_MULTER_DISK_STORAGE');
-    }
-
-    if (!MULTER_STORAGE_PATH) {
-      throw new Error('missing env config options: MULTER_STORAGE_PATH');
-    }
-  }
-
-  if (OPTIONS.USE_DIGITALOCEAN_SPACE) {
-    if (!OPTIONS.USE_S3) {
-      throw new Error('USE_S3 option must be set to true to use USE_DIGITALOCEAN_SPACE');
+          case BucketService.DISK:
+            if (!MULTER_STORAGE_PATH) {
+              throw new Error(
+                `MULTER_STORAGE_PATH option must be set to use USE_FILE_UPLOADER ${BucketService.DISK} option`,
+              );
+            }
+            res = { rootPath: MULTER_STORAGE_PATH };
+            break;
+          case BucketService.MEMORY:
+            res = undefined;
+            break;
+          default:
+            res = undefined;
+        }
+        return res;
+      })(OPTIONS.BUCKET_SERVICE);
+      BUCKET_CONFIG = result;
+    } else {
+      throw new Error(
+        `BUCKET_SERVICE option must be set to one of ${Object.values(BucketService)} to use USE_FILE_UPLOADER`,
+      );
     }
   }
 
   if (OPTIONS.USE_REFRESH_TOKEN) {
     if (!REFRESH_JWT_KEY || !REFRESH_JWT_TIMEOUT) {
       throw Error('missing env config options: REFRESH_JWT_KEY, REFRESH_JWT_TIMEOUT');
-    }
-  }
-
-  if (OPTIONS.USE_S3) {
-    if (!OPTIONS.USE_MULTER) {
-      throw new Error('USE_MULTER option must be set to true to use USE_S3');
-    }
-    if (!AWS_BUCKET_NAME || !AWS_REGION || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
-      throw new Error(
-        'missing env config options: AWS_BUCKET_NAME, AWS_REGION, AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY',
-      );
     }
   }
 

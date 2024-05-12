@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { logger, safeQuery } from '@yumm/utils';
 import Service from './service';
 import { HttpError, HttpResponse } from '.';
-import { Multer } from '@yumm/helpers';
+import { FileUploader, BucketService } from '@yumm/helpers';
 import httpStatus from 'http-status';
-import { OPTIONS } from '../config';
+import { BUCKET_CONFIG, OPTIONS } from '../config';
 
 export default abstract class Controller<T> {
   protected HttpError = HttpError;
@@ -12,12 +12,18 @@ export default abstract class Controller<T> {
   protected resource: string;
   protected resourceId: string;
   abstract service: Service<T, any>;
-  readonly fileProcessor = OPTIONS.USE_MULTER ? Multer : null;
+  readonly fileProcessor = OPTIONS.USE_FILE_UPLOADER ? new FileUploader(OPTIONS.BUCKET_SERVICE!, BUCKET_CONFIG!) : null;
   abstract responseDTO?: Function;
+
+  constructor(resource: string) {
+    this.resource = resource;
+    this.resourceId = `${resource}Id`;
+  }
+
   protected processFile = (req: Request) => {
     if (!this.fileProcessor) return;
     let multerFile!: 'path' | 'location' | 'buffer';
-    if (this.fileProcessor.storageType === 'disk') {
+    if (this.fileProcessor.storageType === BucketService.DISK) {
       multerFile = 'path';
     } else if (this.fileProcessor.storageType === 'memory') {
       if (req.file) {
@@ -71,10 +77,6 @@ export default abstract class Controller<T> {
         next(error);
       }
     };
-  constructor(resource: string) {
-    this.resource = resource;
-    this.resourceId = `${resource}Id`;
-  }
 
   create = this.control((req: Request) => {
     const data = <T>req.body;
