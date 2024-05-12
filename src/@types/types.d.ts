@@ -1,4 +1,4 @@
-import { MESSAGES, OPTIONS } from '../../packages/core/src/config/config';
+import { MESSAGES, OPTIONS } from '@yumm/core/src/config/_config';
 
 declare global {
   MESSAGES, OPTIONS, <z.infer<typeof EnvSchema>>ENV;
