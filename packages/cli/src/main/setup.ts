@@ -18,6 +18,7 @@ const depsPackagesToInstall = [
   'eslint-import-resolver-typescript',
   'eslint-plugin-prettier',
   'nodemon',
+  'cross-env',
 ];
 
 const index = `
@@ -78,15 +79,26 @@ export async function createProject(projectName: string) {
 
   execSync('npm init -y');
   execSync('npx tsc --init');
-  updateTsConfig();
-  createNodemonJson();
-  createYummConfigJson();
-  createYummConfigJson();
-  createEslintJson();
-  updatePackageJson();
-
-  execSync(`npm install ${packagesToInstall.join(' ')}`);
-  execSync(`npm install -D ${depsPackagesToInstall.join(' ')}`);
+  updateTsConfig()
+    .then(() => {
+      return createNodemonJson();
+    })
+    .then(() => {
+      return createYummConfigJson();
+    })
+    .then(() => {
+      return createYummConfigJson();
+    })
+    .then(() => {
+      return createEslintJson();
+    })
+    .then(() => {
+      return updatePackageJson();
+    })
+    .then(() => {
+      execSync(`npm install ${packagesToInstall.join(' ')}`);
+      execSync(`npm install -D ${depsPackagesToInstall.join(' ')}`);
+    });
   console.log('...done');
 }
 
@@ -123,8 +135,8 @@ async function updateTsConfig() {
   tsConfig.compilerOptions.outDir = './dist';
   tsConfig.compilerOptions.strict = true;
   tsConfig.compilerOptions.paths = paths;
-  tsConfig.compilerOptions['ts-node'] = tsNode;
-  tsConfig.compilerOptions['tsc-alias'] = tscAlias;
+  tsConfig['ts-node'] = tsNode;
+  tsConfig['tsc-alias'] = tscAlias;
 
   await fs.writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2));
 }
@@ -238,5 +250,5 @@ async function updatePackageJson() {
 
   payload.scripts = script;
 
-  await fs.writeFile(payload, JSON.stringify(payload, null, 2));
+  await fs.writeFile(packagePath, JSON.stringify(payload, null, 2));
 }
