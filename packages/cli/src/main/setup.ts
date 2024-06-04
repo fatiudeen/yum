@@ -2,6 +2,9 @@
 
 import fs from 'fs-extra';
 import { execSync } from 'child_process';
+import cliSpinners from 'cli-spinners';
+import Spinner from 'tiny-spinner';
+
 import path from 'path';
 const requireJSON5 = require('require-json5');
 
@@ -66,7 +69,9 @@ export const {
 `;
 
 export async function createProject(projectName: string) {
-  console.log('setting up your project...');
+  const spinner = new Spinner();
+  spinner.start('setting up your project...');
+  // const spinner = cliSpinners.dots
 
   await fs.ensureDir(projectName);
   process.chdir(projectName);
@@ -81,25 +86,29 @@ export async function createProject(projectName: string) {
   execSync('npx tsc --init');
   updateTsConfig()
     .then(() => {
+      spinner.update('configured ts-config');
       return createNodemonJson();
     })
     .then(() => {
+      spinner.update('configured nodemon');
       return createYummConfigJson();
     })
     .then(() => {
-      return createYummConfigJson();
-    })
-    .then(() => {
+      spinner.update('setup yummConfig');
       return createEslintJson();
     })
     .then(() => {
+      spinner.update('setup ESlint');
       return updatePackageJson();
     })
     .then(() => {
-      execSync(`npm install ${packagesToInstall.join(' ')}`);
-      execSync(`npm install -D ${depsPackagesToInstall.join(' ')}`);
-    });
-  console.log('...done');
+      spinner.update('installing dependencies');
+
+      execSync(`npm install --silent ${packagesToInstall.join(' ')}`);
+      execSync(`npm install -D --silent ${depsPackagesToInstall.join(' ')}`);
+      spinner.success('done');
+    })
+    .catch((err) => spinner.error(err));
 }
 
 async function updateTsConfig() {
