@@ -17,7 +17,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "npm run clean && tsc",
         "deps:install": "npm i @yumm/utils @yumm/helpers @yumm/core @yumm/cli && git add ./ && git commit -m \"update\"",
-        "pub": "npm run deps:install && npm version patch &&  npm run build && npm publish"
+        "pub": "npm version patch &&  npm run build && npm publish"
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",
@@ -28,7 +28,7 @@
         "eslint-plugin-prettier": "^5.0.0"
     },
     "dependencies": {
-        "@yumm/cli": "^0.0.14",
+        "@yumm/cli": "^0.0.15",
         "@yumm/core": "^0.0.6",
         "@yumm/helpers": "^1.0.8",
         "@yumm/utils": "^1.0.12"
