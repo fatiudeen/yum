@@ -2,7 +2,6 @@
 
 import fs from 'fs-extra';
 import { execSync } from 'child_process';
-import cliSpinners from 'cli-spinners';
 import Spinner from 'tiny-spinner';
 
 import path from 'path';
