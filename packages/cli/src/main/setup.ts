@@ -2,14 +2,23 @@
 
 import fs from 'fs-extra';
 import { execSync } from 'child_process';
-// import Spinner from 'tiny-spinner';
 
 import path from 'path';
 const requireJSON5 = require('require-json5');
-const Spinner = require('tiny-spinner');
+// const Spinner = require('tiny-spinner');
 
 const FOLDERS = ['src/routers', 'src/controllers', 'src/services', 'src/repositories', 'src/dtos', 'src/__tests__'];
-const packagesToInstall = ['yumm'];
+const packagesToInstall = [
+  'yumm',
+  'mongoose',
+  'winston',
+  'nodemailer',
+  'multer',
+  '@aws-sdk/client-s3',
+  'multer-s3',
+  'aws-sdk',
+  'axios',
+];
 const depsPackagesToInstall = [
   'ts-node',
   'tsc-alias',
@@ -24,10 +33,18 @@ const depsPackagesToInstall = [
   'cross-env',
 ];
 
+const env = `
+PORT=5000
+DB_URI=DB_URI='mongodb+srv://localhost:27017'
+JWT_TIMEOUT=24h
+JWT_KEY='secret'
+`;
+
 const index = `
-import {App} from 'yumm'
+import {App, optionsValidation} from '@yumm/core'
 import {PORT,DB_URI } from '@config'
 
+optionsValidation()
 const app = new App();
 
 app.listen(<number>(<unknown>PORT), DB_URI);`;
@@ -69,7 +86,9 @@ export const {
 `;
 
 export async function createProject(projectName: string) {
-  const spinner = new Spinner();
+  const Spinner = await import('tiny-spinner');
+
+  const spinner = new Spinner.default();
   spinner.start('setting up your project...');
   // const spinner = cliSpinners.dots
 
@@ -81,6 +100,7 @@ export async function createProject(projectName: string) {
   }
   await fs.writeFile('src/index.ts', index);
   await fs.writeFile('src/config.ts', config);
+  await fs.writeFile('.env.dev', env);
 
   execSync('npm init -y');
   execSync('npx tsc --init');
