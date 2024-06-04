@@ -16,8 +16,8 @@
         "clean": "del ./dist/*",
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "npm run clean && tsc",
-        "deps:install": "npm i @yumm/utils @yumm/helpers @yumm/core @yumm/cli",
-        "pub": "npm run deps:install && git add ./ && git commit -m \"update\" && npm version patch &&  npm run build && npm publish && git add ./ && git commit -m \"update\""
+        "deps:install": "npm i @yumm/utils @yumm/helpers @yumm/core @yumm/cli && git add ./ && git commit -m \"update\"",
+        "pub": "npm run deps:install && npm version patch &&  npm run build && npm publish"
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",
