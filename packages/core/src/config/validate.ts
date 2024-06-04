@@ -1,14 +1,22 @@
 /* eslint-disable import/no-dynamic-require */
 import { config } from 'dotenv';
-import { yummConfig } from './getYummConfig';
+import { yummConfig, ROOT_PATH } from './getYummConfig';
 import { BucketService, FileUploadOptions } from '@yumm/helpers';
+import path from 'path';
+import fs from 'fs';
 
 if (process.env.NODE_ENV === 'development') {
-  config({ path: '.env.dev' });
-  console.log(yummConfig);
+  if (fs.existsSync(path.resolve(ROOT_PATH, '.env.dev'))) {
+    config({ path: path.resolve(ROOT_PATH, '.env.dev') });
+  } else {
+    config({ path: path.resolve(ROOT_PATH, '.env') });
+  }
+
+  // config({ path: '.env.dev' });
+  // console.log(yummConfig);
 } else if (process.env.NODE_ENV === 'test') {
   config({ path: '.env.test' });
-  console.log(yummConfig);
+  // console.log(yummConfig);
 } else config();
 
 export const MESSAGES = {
@@ -82,7 +90,7 @@ export const OPTIONS: {
   USE_ANALYTICS: boolean;
   // USE_REDIS: boolean;
   USE_DATABASE: 'mongodb' | 'postgresql' | 'sqlite';
-  DIGITALOCEAN_SPACE_ENDPOINT: 'nyc3.digitaloceanspaces.com';
+  // DIGITALOCEAN_SPACE_ENDPOINT: 'nyc3.digitaloceanspaces.com';
   BUCKET_SERVICE: BucketService | undefined;
   // eslint-disable-next-line global-require
 } = yummConfig;
