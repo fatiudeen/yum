@@ -2,10 +2,11 @@
 
 import fs from 'fs-extra';
 import { execSync } from 'child_process';
-import Spinner from 'tiny-spinner';
+// import Spinner from 'tiny-spinner';
 
 import path from 'path';
 const requireJSON5 = require('require-json5');
+const Spinner = require('tiny-spinner');
 
 const FOLDERS = ['src/routers', 'src/controllers', 'src/services', 'src/repositories', 'src/dtos', 'src/__tests__'];
 const packagesToInstall = ['yumm'];
