@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import fs from 'fs-extra';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 
+import { promisify } from 'util';
 import path from 'path';
 const requireJSON5 = require('require-json5');
-// const Spinner = require('tiny-spinner');
 
 const FOLDERS = ['src/routers', 'src/controllers', 'src/services', 'src/repositories', 'src/dtos', 'src/__tests__'];
 const packagesToInstall = [
@@ -35,7 +35,7 @@ const depsPackagesToInstall = [
 
 const env = `
 PORT=5000
-DB_URI='mongodb+srv://localhost:27017'
+DB_URI='mongodb://localhost:27017'
 JWT_TIMEOUT=24h
 JWT_KEY='secret'
 `;
@@ -87,46 +87,40 @@ export const {
 
 export async function createProject(projectName: string) {
   const ora = await import('ora');
+  const execAsync = promisify(exec);
 
   const spinner = ora.default('setting up your project').start();
 
-  await fs.ensureDir(projectName);
-  process.chdir(projectName);
+  try {
+    await fs.ensureDir(projectName);
+    process.chdir(projectName);
 
-  for await (const folder of FOLDERS) {
-    await fs.ensureDir(folder);
+    for await (const folder of FOLDERS) {
+      await fs.ensureDir(folder);
+    }
+    await fs.writeFile('src/index.ts', index);
+    await fs.writeFile('src/config.ts', config);
+    await fs.writeFile('.env.dev', env);
+
+    await execAsync('npm init -y');
+    await execAsync('npx tsc --init');
+    await updateTsConfig();
+    spinner.text = 'configured ts-config';
+    await createNodemonJson();
+    spinner.text = 'configured nodemon';
+    await createYummConfigJson();
+    spinner.text = 'setup yummConfig';
+    await createEslintJson();
+    spinner.text = 'setup ESlint';
+    await updatePackageJson();
+    spinner.text = 'installing dependencies';
+
+    await execAsync(`npm install --silent ${packagesToInstall.join(' ')}`);
+    await execAsync(`npm install -D --silent ${depsPackagesToInstall.join(' ')}`);
+    spinner.succeed('done');
+  } catch (err) {
+    spinner.fail('error while creating project');
   }
-  await fs.writeFile('src/index.ts', index);
-  await fs.writeFile('src/config.ts', config);
-  await fs.writeFile('.env.dev', env);
-
-  execSync('npm init -y');
-  execSync('npx tsc --init');
-  updateTsConfig()
-    .then(() => {
-      spinner.text = 'configured ts-config';
-      return createNodemonJson();
-    })
-    .then(() => {
-      spinner.text = 'configured nodemon';
-      return createYummConfigJson();
-    })
-    .then(() => {
-      spinner.text = 'setup yummConfig';
-      return createEslintJson();
-    })
-    .then(() => {
-      spinner.text = 'setup ESlint';
-      return updatePackageJson();
-    })
-    .then(() => {
-      spinner.text = 'installing dependencies';
-
-      execSync(`npm install --silent ${packagesToInstall.join(' ')}`);
-      execSync(`npm install -D --silent ${depsPackagesToInstall.join(' ')}`);
-      spinner.succeed('done');
-    })
-    .catch((err) => spinner.fail(err));
 }
 
 async function updateTsConfig() {
