@@ -9,12 +9,15 @@
     "author": "fatiudeen",
     "license": "MIT",
     "version": "0.0.10",
+    "files": [
+        "dist/**/*"
+    ],
     "scripts": {
         "clean": "del ./dist/*",
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "npm run clean && tsc",
         "deps:install": "npm i @yumm/utils @yumm/helpers @yumm/core @yumm/cli",
-        "pub": "npm run deps:install && npm version patch && git add ./ && git commit -m \"update\" &&  npm run build && npm publish"
+        "pub": "npm run deps:install && git add ./ && git commit -m \"update\" && npm version patch && git add ./ && git commit -m \"update\" &&  npm run build && npm publish"
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",
@@ -25,7 +28,7 @@
         "eslint-plugin-prettier": "^5.0.0"
     },
     "dependencies": {
-        "@yumm/cli": "^0.0.10",
+        "@yumm/cli": "^0.0.13",
         "@yumm/core": "^0.0.5",
         "@yumm/helpers": "^1.0.8",
         "@yumm/utils": "^1.0.12"
