@@ -83,6 +83,7 @@ export async function createProject(projectName: string) {
   createYummConfigJson();
   createYummConfigJson();
   createEslintJson();
+  updatePackageJson();
 
   execSync(`npm install ${packagesToInstall.join(' ')}`);
   execSync(`npm install -D ${depsPackagesToInstall.join(' ')}`);
