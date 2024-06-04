@@ -35,7 +35,7 @@ const depsPackagesToInstall = [
 
 const env = `
 PORT=5000
-DB_URI=DB_URI='mongodb+srv://localhost:27017'
+DB_URI='mongodb+srv://localhost:27017'
 JWT_TIMEOUT=24h
 JWT_KEY='secret'
 `;
@@ -86,11 +86,9 @@ export const {
 `;
 
 export async function createProject(projectName: string) {
-  const Spinner = await import('tiny-spinner');
+  const ora = await import('ora');
 
-  const spinner = new Spinner.default();
-  spinner.start('setting up your project...');
-  // const spinner = cliSpinners.dots
+  const spinner = ora.default('setting up your project').start();
 
   await fs.ensureDir(projectName);
   process.chdir(projectName);
@@ -106,29 +104,29 @@ export async function createProject(projectName: string) {
   execSync('npx tsc --init');
   updateTsConfig()
     .then(() => {
-      spinner.update('configured ts-config');
+      spinner.text = 'configured ts-config';
       return createNodemonJson();
     })
     .then(() => {
-      spinner.update('configured nodemon');
+      spinner.text = 'configured nodemon';
       return createYummConfigJson();
     })
     .then(() => {
-      spinner.update('setup yummConfig');
+      spinner.text = 'setup yummConfig';
       return createEslintJson();
     })
     .then(() => {
-      spinner.update('setup ESlint');
+      spinner.text = 'setup ESlint';
       return updatePackageJson();
     })
     .then(() => {
-      spinner.update('installing dependencies');
+      spinner.text = 'installing dependencies';
 
       execSync(`npm install --silent ${packagesToInstall.join(' ')}`);
       execSync(`npm install -D --silent ${depsPackagesToInstall.join(' ')}`);
-      spinner.success('done');
+      spinner.succeed('done');
     })
-    .catch((err) => spinner.error(err));
+    .catch((err) => spinner.fail(err));
 }
 
 async function updateTsConfig() {
@@ -240,14 +238,14 @@ async function createEslintJson() {
 
 async function createYummConfigJson() {
   const conf = {
-    USE_ADMIN_SEED: true,
-    USE_SMTP: true,
-    USE_S3: true,
-    USE_SOCKETS: true,
-    USE_AUTH_SESSIONS: true,
-    USE_REFRESH_TOKEN: true,
-    USE_MULTER: true,
-    USE_DIGITALOCEAN_SPACE: true,
+    USE_ADMIN_SEED: false,
+    USE_SMTP: false,
+    USE_S3: false,
+    USE_SOCKETS: false,
+    USE_AUTH_SESSIONS: false,
+    USE_REFRESH_TOKEN: false,
+    USE_MULTER: false,
+    USE_DIGITALOCEAN_SPACE: false,
     USE_MULTER_DISK_STORAGE: false,
     USE_OAUTH_GOOGLE: false,
     USE_OAUTH_FACEBOOK: false,
