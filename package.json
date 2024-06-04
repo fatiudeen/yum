@@ -8,7 +8,7 @@
     ],
     "author": "fatiudeen",
     "license": "MIT",
-    "version": "0.0.11",
+    "version": "0.0.10",
     "files": [
         "dist/**/*"
     ],
@@ -17,7 +17,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "npm run clean && tsc",
         "deps:install": "npm i @yumm/utils @yumm/helpers @yumm/core @yumm/cli",
-        "pub": "npm run deps:install && git add ./ && git commit -m \"update\" && npm version patch && git add ./ && git commit -m \"update\" &&  npm run build && npm publish"
+        "pub": "npm run deps:install && git add ./ && git commit -m \"update\" && npm version patch &&  npm run build && npm publish && git add ./ && git commit -m \"update\""
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",
