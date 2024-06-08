@@ -22,7 +22,7 @@ const paths = {
     // import { Request } from 'express';
     import <Keyword>Service from '@services/<keyword>.service';
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
-    import Controller from '@controllers/controller';
+    import { Controller } from "@yumm/core";
     // import { OPTIONS } from '@config';
     // import { <keyword>ResponseDTO } from '@dtos/<keyword>.dto';
 
@@ -182,7 +182,7 @@ const paths = {
     `,
   'src/services/<keyword>.service.ts': `import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
     import <Keyword>Repository from '@repositories/<Keyword>.repository';
-    import Service from '@services/service';
+    import { Service } from "@yumm/core";
     
     class <Keyword>Service extends Service<<Keyword>Interface, <Keyword>Repository> {
       protected repository = new <Keyword>Repository();
