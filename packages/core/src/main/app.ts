@@ -17,7 +17,7 @@ import { errorHandler } from './middlewares';
 // import UsersRoute from '@routes/user.route';
 import * as Config from '../config';
 // import { rateLimiter } from '@middlewares/rateLimiter';
-import Route from './router';
+import { Route } from './router';
 import { BucketService } from '@yumm/helpers';
 // import session from 'express-session';
 // import visitCount from '@middlewares/visitCount';
@@ -45,14 +45,14 @@ export class App {
         },
       });
     }
+    if (middlewares) {
+      this.middlewares.push(...middlewares);
+    }
     this.initMiddlewares();
     if (routes) {
       this.routes.push(...routes);
     }
 
-    if (middlewares) {
-      this.middlewares.push(...middlewares);
-    }
     this.initRoutes();
     this.initErrorHandlers();
   }
@@ -70,10 +70,6 @@ export class App {
         .status(200)
         .json({ message: 'We both know you are not supposed to be here, but since you are, have a cup of coffee ☕' });
     });
-
-    this.middlewares.forEach((middleware) => {
-      this.app.use(middleware);
-    });
   }
   private initMiddlewares() {
     this.app.use(
@@ -81,6 +77,10 @@ export class App {
         origin: ['*'],
       }),
     );
+
+    this.middlewares.forEach((middleware) => {
+      this.app.use(middleware);
+    });
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan('dev'));
     this.app.use(express.json());

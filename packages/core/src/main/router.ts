@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import Controller from './controller';
+import { Controller } from './controller';
 import { validator } from './middlewares';
 import { ValidationChain } from 'express-validator';
 import { authorize } from './middlewares';
 import { FileUploader } from '@yumm/helpers';
 // import dto from '@dtos/dto';
 
-export default abstract class Route<T> {
+export abstract class Route<T> {
   abstract path: string;
   readonly router: Router;
   abstract controller: Controller<T>;

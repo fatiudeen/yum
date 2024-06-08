@@ -1,6 +1,6 @@
 import Repository from './data/mongooseRepository';
 // single model methods
-export default abstract class Service<T, R extends Repository<T>> {
+export abstract class Service<T, R extends Repository<T>> {
   protected abstract repository: R;
   protected observables?: Record<string, Function>;
   // protected observer = observer();

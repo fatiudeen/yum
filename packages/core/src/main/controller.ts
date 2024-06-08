@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger, safeQuery } from '@yumm/utils';
-import Service from './service';
+import { Service } from './service';
 import { HttpError, HttpResponse } from '.';
 import { FileUploader, BucketService } from '@yumm/helpers';
 import httpStatus from 'http-status';
 import { BUCKET_CONFIG, OPTIONS } from '../config';
 
-export default abstract class Controller<T> {
+export abstract class Controller<T> {
   protected HttpError = HttpError;
   protected HttpResponse = HttpResponse;
   protected resource: string;
