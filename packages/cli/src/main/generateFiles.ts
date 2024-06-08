@@ -1,39 +1,24 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import nodePath from 'path';
 import { exec } from 'child_process';
+import { promisify } from 'util';
 
+const execAsync = promisify(exec);
 // Define content and path mappings for each keyword
 const paths = {
-  'src/api/v1/interfaces/<Keyword>.Interface.ts': `export interface <Keyword>Interface {
+  'src/interfaces/<Keyword>.Interface.ts': `export interface <Keyword>Interface {
     example: string
         // Define properties and methods related to <keyword>
     }`,
-  'src/api/v1/repositories/<Keyword>.repository.ts': `
+  'src/repositories/<Keyword>.repository.ts': `
+    import { Repository, ModelFactory } from '@yumm/core';
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
-    import <Keyword> from '@models/<Keyword>';
-    import Repository from '@repositories/repository';
     
     export default class <Keyword>Repository extends Repository<<Keyword>Interface> {
-      protected model = <Keyword>;
+      protected model = ModelFactory('<Keyword>', { example: String})
     }
     `,
-  'src/api/v1/models/<Keyword>.ts': `
-    import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
-    import { model, Schema, Model } from 'mongoose';
-
-    const <Keyword>Schema = new Schema<<Keyword>Interface>(
-    {
-        // add schema here
-        example: String
-    },
-    {
-        timestamps: true,
-    },
-    );
-
-    export default <Model<<Keyword>Interface>>model('<Keyword>', <Keyword>Schema);
-`,
-  'src/api/v1/controllers/<keyword>.controller.ts': `/* eslint-disable no-underscore-dangle */
+  'src/controllers/<keyword>.controller.ts': `/* eslint-disable no-underscore-dangle */
     // import { Request } from 'express';
     import <Keyword>Service from '@services/<keyword>.service';
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
@@ -47,7 +32,7 @@ const paths = {
     }
 
     export default <Keyword>Controller;`,
-  'src/api/v1/__test__/__fixtures__/<keyword>.ts': `import { faker } from '@faker-js/faker';
+  'src/__test__/__fixtures__/<keyword>.ts': `import { faker } from '@faker-js/faker';
 
     export const invalid<Keyword>Id = faker.database.mongodbObjectId().toString();
     export const valid<Keyword>Id = faker.database.mongodbObjectId().toString();
@@ -63,7 +48,7 @@ const paths = {
     export const valid<Keyword>UpdateData = {
         example: faker.random.word()
     };`,
-  'src/api/v1/__test__/<keyword>.test.ts': `import supertest from 'supertest';
+  'src/__test__/<keyword>.test.ts': `import supertest from 'supertest';
     import { logger } from '@utils/logger';
     import <Keyword>Service from '@services/<keyword>.service';
     import App from '../app';
@@ -183,7 +168,7 @@ const paths = {
         });
       });
     });`,
-  'src/api/v1/dtos/<keyword>.dto.ts': `import { body, param } from 'express-validator';
+  'src/dtos/<keyword>.dto.ts': `import { body, param } from 'express-validator';
 
     export const <keyword>RequestDTO = {
       id: [param('<keyword>Id').exists()],
@@ -195,7 +180,7 @@ const paths = {
       ],
     };
     `,
-  'src/api/v1/services/<keyword>.service.ts': `import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
+  'src/services/<keyword>.service.ts': `import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
     import <Keyword>Repository from '@repositories/<Keyword>.repository';
     import Service from '@services/service';
     
@@ -204,10 +189,10 @@ const paths = {
     }
     
     export default <Keyword>Service;`,
-  'src/api/v1/routes/<keyword>.route.ts': `/* eslint-disable import/no-unresolved */
+  'src/routes/<keyword>.route.ts': `/* eslint-disable import/no-unresolved */
     import <Keyword>Controller from '@controllers/<keyword>.controller';
     import { <keyword>RequestDTO } from '@dtos/<keyword>.dto';
-    import Route from '@routes/route';
+    import { Route } from "@yumm/core";
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
     
     class <Keyword>Route extends Route<<Keyword>Interface> {
@@ -227,39 +212,44 @@ const paths = {
     export default <Keyword>Route;`,
 };
 
-function updateAppTs(keyword: any, Keyword: any, remove = false) {
-  const file = 'src/api/v1/app.ts';
-  const input = `${keyword}s: new ${Keyword}Route(true),`;
+async function updateAppTs(keyword: any, Keyword: any, remove = false) {
+  const file = 'src/index.ts';
+  const input = `new ${Keyword}Route(true),`;
+  // const input = `${keyword}s: new ${Keyword}Route(true),`;
   const importLine = `import ${Keyword}Route from '@routes/${keyword}.route';`;
   try {
-    const data = fs.readFileSync(file, 'utf8');
+    const data = await fs.readFile(file, 'utf8');
     let updatedContent: string | NodeJS.ArrayBufferView;
     if (remove) {
       updatedContent = data.replace(`${input}\n`, '').replace(`${importLine}\n`, '');
     } else {
       updatedContent = data
-        .replace(`'': new AuthRoute(),`, `'': new AuthRoute(), ${input}`)
-        .replace(`import Route from '@routes/route';`, `import Route from '@routes/route'; ${importLine}`);
+        .replace(`routes: [`, `routes: [ ${input},`)
+        .replace(`import { PORT, DB_URI } from '@config';`, `import { PORT, DB_URI } from '@config'; ${importLine}`);
     }
-    fs.writeFileSync(file, updatedContent, 'utf8');
-    console.log('File updated successfully.');
+    await fs.writeFile(file, updatedContent, 'utf8');
+    return 'Index updated successfully.';
   } catch (error) {
-    console.error('Error writing file:', error);
+    throw 'Error Updating Index:';
   }
 }
 
-function createFile(filepath: string, content: string | NodeJS.ArrayBufferView) {
-  if (fs.existsSync(filepath)) {
-    console.log(`File ${filepath} already exists. Skipping...`);
-    return;
-  }
-  fs.writeFileSync(filepath, content);
-  console.log(`Created ${filepath}`);
-}
-
-function removeFile(filePath: fs.PathLike) {
+async function createFile(filepath: string, content: string | NodeJS.ArrayBufferView) {
   try {
-    fs.unlinkSync(filePath);
+    const exists = await fs.exists(filepath);
+    if (!exists) {
+      await fs.writeFile(filepath, content);
+      return `Created: ${filepath}`;
+    }
+    return `${filepath} already exists`;
+  } catch (error) {
+    throw `Error writing file: ${filepath}`;
+  }
+}
+
+async function removeFile(filePath: fs.PathLike) {
+  try {
+    await fs.unlink(filePath);
     console.log(`Removed ${filePath}`);
   } catch (error: any) {
     console.error(`Error removing ${filePath}:`, error.message);
@@ -288,56 +278,66 @@ function getAllFilesInDir(ignore: string[] = []) {
   }
 }
 
-export const newCrud = (keyword: string) => {
-  keyword = keyword.toLowerCase();
-  const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-  let _paths = '';
-  for (const [path, content] of Object.entries(paths)) {
-    const _path = path.replace('<keyword>', keyword).replace('<Keyword>', Keyword);
-    createFile(_path, content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
-    _paths = `${_paths} ${_path}`;
-  }
-  updateAppTs(keyword, Keyword);
+export const newCrud = async (keyword: string) => {
+  try {
+    const packagePath = nodePath.join(process.cwd(), 'yummConfig.json');
+    const exists = fs.exists(packagePath);
+    if (!exists) {
+      console.log('Invalid Yumm Project');
+    }
+    keyword = keyword.toLowerCase();
+    const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+    let _paths = '';
+    for await (const [path, content] of Object.entries(paths)) {
+      const _path = path.replace('<keyword>', keyword).replace('<Keyword>', Keyword);
+      await createFile(_path, content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
+      _paths = `${_paths} ${_path}`;
+    }
+    await updateAppTs(keyword, Keyword);
 
-  // eslint-disable-next-line no-unused-vars
-  exec(`npm run prettier -- ${_paths} src/api/v1/app.ts`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error Formatting Files: ${error}`);
+    // eslint-disable-next-line no-unused-vars
+    const { stdout, stderr } = await execAsync(`npm run prettier -- ${_paths} src/index.ts`);
+    if (stderr) {
+      console.error(`Error Formatting Files`);
       return;
     }
-    console.log(`Files Formatted: ${stdout}`);
-  });
+    console.log(`Files Formatted`);
+  } catch (err: any) {
+    console.log(`Error Caught`);
+
+    err.stderr ? (err = err.stderr) : err;
+
+    console.error(err);
+  }
 };
 
-export const removeCrud = (keyword: string) => {
+export const removeCrud = async (keyword: string) => {
   keyword = keyword.toLowerCase();
   const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
   for (const path of Object.keys(paths)) {
-    removeFile(path.replace('<keyword>', keyword).replace('<Keyword>', Keyword));
+    await removeFile(path.replace('<keyword>', keyword).replace('<Keyword>', Keyword));
   }
   updateAppTs(keyword, Keyword, true);
   // eslint-disable-next-line no-unused-vars
-  exec(`npm run prettier -- src/api/v1/app.ts`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error Formatting Files: ${error}`);
-      return;
-    }
-    console.log(`Files Formatted: ${stdout}`);
-  });
-};
-
-export const fixLint = () => {
-  const ignoreFiles = ['IdPlugin, AuthSession'];
-  console.log();
-
-  for (const file of getAllFilesInDir(ignoreFiles)) {
-    // eslint-disable-next-line no-unused-vars
-    exec(`npm run crud new -- ${file}`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error Fixing File: ${error}`);
-        return;
-      }
-      console.log(`Files Fixed: ${stdout}`);
-    });
+  const { stdout, stderr } = await execAsync(`npm run prettier -- src/app.ts`);
+  if (stderr) {
+    console.error(`Error Formatting Files`);
+    return;
   }
+  console.log(`Files Formatted: ${stdout}`);
 };
+
+// export const fixLint = () => {
+//   const ignoreFiles = ['IdPlugin, AuthSession'];
+
+//   for (const file of getAllFilesInDir(ignoreFiles)) {
+//     // eslint-disable-next-line no-unused-vars
+//     exec(`npm run crud new -- ${file}`, (error, stdout, stderr) => {
+//       if (error) {
+//         console.error(`Error Fixing File: ${error}`);
+//         return;
+//       }
+//       console.log(`Files Fixed: ${stdout}`);
+//     });
+//   }
+// };

@@ -7,7 +7,18 @@ import { promisify } from 'util';
 import path from 'path';
 const requireJSON5 = require('require-json5');
 
-const FOLDERS = ['src/routers', 'src/controllers', 'src/services', 'src/repositories', 'src/dtos', 'src/__tests__'];
+const FOLDERS = [
+  'src/routes',
+  'src/controllers',
+  'src/services',
+  'src/interfaces',
+  'src/repositories',
+  'src/dtos',
+  'src/__test__',
+  'src/__test__/__fixtures__',
+  'src/__test__/__mocks__',
+  'src/__test__/__utils__',
+];
 const packagesToInstall = [
   'yumm',
   'mongoose',
@@ -29,6 +40,7 @@ const depsPackagesToInstall = [
   'eslint-config-prettier',
   'eslint-import-resolver-typescript',
   'eslint-plugin-prettier',
+  '@typescript-eslint/eslint-plugin',
   'nodemon',
   'cross-env',
 ];
@@ -42,10 +54,15 @@ JWT_KEY='secret'
 
 const index = `
 import {App, optionsValidation} from '@yumm/core'
-import {PORT,DB_URI } from '@config'
+import { PORT, DB_URI } from '@config';
 
 optionsValidation()
-const app = new App();
+
+const options = {
+  routes: [],
+  middlewares: []
+}
+const app = new App(options);
 
 app.listen(<number>(<unknown>PORT), DB_URI);`;
 
