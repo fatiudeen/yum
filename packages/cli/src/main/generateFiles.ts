@@ -224,7 +224,7 @@ async function updateAppTs(keyword: any, Keyword: any, remove = false) {
       updatedContent = data.replace(`${input}\n`, '').replace(`${importLine}\n`, '');
     } else {
       updatedContent = data
-        .replace(`routes: [`, `routes: [ ${input},`)
+        .replace(`routes: [`, `routes: [ ${input}`)
         .replace(`import { PORT, DB_URI } from '@config';`, `import { PORT, DB_URI } from '@config'; ${importLine}`);
     }
     await fs.writeFile(file, updatedContent, 'utf8');
