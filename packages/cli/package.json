@@ -1,6 +1,6 @@
 {
   "name": "@yumm/cli",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "cli component of yumm",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",

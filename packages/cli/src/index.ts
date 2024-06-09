@@ -10,8 +10,8 @@ program.version(ver);
 
 program.command('create-app').arguments('<project-name>').action(createProject);
 // program.command('fix').action(fixLint);
-program.command('rm').arguments('<keyword>').action(removeCrud);
+program.command('rm-crud').arguments('<keyword>').action(removeCrud);
 
-program.command('new-crud').arguments('<keyword>').action(newCrud);
+program.command('create-crud').arguments('<keyword>').option('--use-auth').action(newCrud);
 
 program.parse(process.argv);

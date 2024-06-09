@@ -13,9 +13,14 @@ const paths = {
   'src/repositories/<Keyword>.repository.ts': `
     import { Repository, ModelFactory } from '@yumm/core';
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
-    
+
+    // this variable is a temporary fix as ModelFactory will be called twice when running test 
+    // if placed in model property it will return a mongoose error indicating duplicate models in db
+    const model = ModelFactory<<Keyword>Interface>('<Keyword>', { example: String})
+
+
     export default class <Keyword>Repository extends Repository<<Keyword>Interface> {
-      protected model = ModelFactory<<Keyword>Interface>('<Keyword>', { example: String})
+      protected model = model
     }
     `,
   'src/controllers/<keyword>.controller.ts': `/* eslint-disable no-underscore-dangle */
@@ -62,10 +67,10 @@ const paths = {
     
     const authService = new AuthService();
     const <keyword>Service = new <Keyword>Service();
-    const app = App.instance(appOptions).instance();
+    const app = App.instance(appOptions);
     
     let authentication: object;
-    const baseUrl = '/api/v1/<keyword>s';
+    const baseUrl = '/api/v1/<keywords>';
     // let userId: string;
     let <keyword>Id: string;
     
@@ -109,7 +114,7 @@ const paths = {
         });
       });
       describe(\`GET \${baseUrl} ==========>>>>\`, () => {
-        describe('given a valid token and <keyword>s exists', () => {
+        describe('given a valid token and <keywords> exists', () => {
           it('should return 200 and a non empty array', async () => {
             const { statusCode, body } = await supertest(app).get(baseUrl).set(authentication);
     
@@ -181,9 +186,9 @@ const paths = {
     logger.silent = true;
     
     const <keyword>Service = new <Keyword>Service();
-    const app =  App.instance(appOptions).instance();
+    const app =  App.instance(appOptions);
     
-    const baseUrl = '/api/v1/<keyword>s';
+    const baseUrl = '/api/v1/<keywords>';
     // let userId: string;
     let <keyword>Id: string;
     
@@ -222,7 +227,7 @@ const paths = {
         });
       });
       describe(\`GET \${baseUrl} ==========>>>>\`, () => {
-        describe('given a valid token and <keyword>s exists', () => {
+        describe('given a valid token and <keywords> exists', () => {
           it('should return 200 and a non empty array', async () => {
             const { statusCode, body } = await supertest(app).get(baseUrl);
     
@@ -311,7 +316,7 @@ const paths = {
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
     
     class <Keyword>Route extends Route<<Keyword>Interface> {
-      path = '<keyword>'
+      path = '<keywords>'
       controller = new <Keyword>Controller('<keyword>');
       dto = <keyword>RequestDTO;
       initRoutes() {
@@ -330,17 +335,17 @@ const paths = {
 
 async function updateConfig(keyword: any, Keyword: any, remove = false) {
   const file = 'src/config.ts';
-  const input = `${Keyword}Route,`;
+  const input = `${Keyword}Route`;
   // const input = `${keyword}s: new ${Keyword}Route(true),`;
   const importLine = `import ${Keyword}Route from '@routes/${keyword}.route';`;
   try {
     const data = await fs.readFile(file, 'utf8');
     let updatedContent: string | NodeJS.ArrayBufferView;
     if (remove) {
-      updatedContent = data.replace(`${input}\n`, '').replace(`${importLine}\n`, '');
+      updatedContent = data.replace(`${importLine}\n`, '').replace(`${input}`, '');
     } else {
       updatedContent = data
-        .replace(`routes: [`, `routes: [ ${input}`)
+        .replace(`routes: [`, `routes: [ ${input},`)
         .replace(`import 'dotenv/config';`, `import 'dotenv/config'; ${importLine}`);
     }
     await fs.writeFile(file, updatedContent, 'utf8');
@@ -366,9 +371,9 @@ async function createFile(filepath: string, content: string | NodeJS.ArrayBuffer
 async function removeFile(filePath: fs.PathLike) {
   try {
     await fs.unlink(filePath);
-    console.log(`Removed ${filePath}`);
+    return `Removed ${filePath}`;
   } catch (error: any) {
-    console.error(`Error removing ${filePath}:`, error.message);
+    throw `Error removing ${filePath}:`;
   }
 }
 
@@ -394,12 +399,11 @@ async function removeFile(filePath: fs.PathLike) {
 //   }
 // }
 
-export const newCrud = async (keyword: string) => {
+export const newCrud = async (keyword: string, option: any) => {
+  const ora = await import('ora');
+
+  const spinner = ora.default(`creating crud: ${keyword}`).start();
   try {
-    const ora = await import('ora');
-
-    const spinner = ora.default(`creating crud: ${keyword}`).start();
-
     const packagePath = nodePath.join(process.cwd(), 'yummConfig.json');
     const exists = await fs.exists(packagePath);
     if (!exists) {
@@ -409,50 +413,77 @@ export const newCrud = async (keyword: string) => {
       return;
     }
     keyword = keyword.toLowerCase();
+    const keywords = pluralize(keyword);
     const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+    // const Keywords = pluralize(Keyword); No usage for now
+
     let _paths = '';
+    var info;
     for await (const [path, content] of Object.entries(paths)) {
       const _path = path.replace('<keyword>', keyword).replace('<Keyword>', Keyword);
       if (Array.isArray(content)) {
-        await createFile(_path, content[1].replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
+        info = await createFile(
+          _path,
+          content[1]
+            .replaceAll('<keyword>', keyword)
+            .replaceAll('<Keyword>', Keyword)
+            .replaceAll('<keywords>', keywords),
+        );
+        spinner.info(info);
       } else {
-        await createFile(_path, content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
+        info = await createFile(
+          _path,
+          content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword).replaceAll('<keywords>', keywords),
+        );
+        spinner.info(info);
       }
       _paths = `${_paths} ${_path}`;
     }
-    await updateConfig(keyword, Keyword);
+    info = await updateConfig(keyword, Keyword);
+    spinner.info(info);
 
     // eslint-disable-next-line no-unused-vars
-    const { stdout, stderr } = await execAsync(`npm run prettier -- ${_paths} src/index.ts`);
+    const { stdout, stderr } = await execAsync(`npm run prettier -- ${_paths} src/config.ts`);
     if (stderr) {
-      console.error(`Error Formatting Files`);
+      // console.error(`Error Formatting Files`);
       return;
     }
     spinner.info(` ${keyword} Files Formatted`);
     spinner.succeed('done');
   } catch (err: any) {
-    console.log(`Error Caught`);
-
     err.stderr ? (err = err.stderr) : err;
-
-    console.error(err);
+    spinner.info(err);
+    spinner.fail('Error creating Crud');
   }
 };
 
 export const removeCrud = async (keyword: string) => {
-  keyword = keyword.toLowerCase();
-  const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-  for (const path of Object.keys(paths)) {
-    await removeFile(path.replace('<keyword>', keyword).replace('<Keyword>', Keyword));
+  const ora = await import('ora');
+
+  const spinner = ora.default(`creating crud: ${keyword}`).start();
+  try {
+    keyword = keyword.toLowerCase();
+    const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+    for (const path of Object.keys(paths)) {
+      const info = await removeFile(path.replace('<keyword>', keyword).replace('<Keyword>', Keyword));
+      spinner.info(info);
+    }
+    updateConfig(keyword, Keyword, true);
+    // eslint-disable-next-line no-unused-vars
+    const { stdout, stderr } = await execAsync(`npm run prettier -- src/config.ts`);
+    if (stderr) {
+      // console.error(`Error Formatting Files`);
+      return;
+    } else {
+      spinner.info('Formatting Files');
+    }
+
+    spinner.succeed(`Crud Removed`);
+  } catch (err: any) {
+    err.stderr ? (err = err.stderr) : err;
+    spinner.info(err);
+    spinner.fail('Error Removing Crud');
   }
-  updateConfig(keyword, Keyword, true);
-  // eslint-disable-next-line no-unused-vars
-  const { stdout, stderr } = await execAsync(`npm run prettier -- src/app.ts`);
-  if (stderr) {
-    console.error(`Error Formatting Files`);
-    return;
-  }
-  console.log(`Files Formatted: ${stdout}`);
 };
 
 // export const fixLint = () => {
@@ -469,3 +500,34 @@ export const removeCrud = async (keyword: string) => {
 //     });
 //   }
 // };
+function pluralize(word: string): string {
+  // Define irregular plurals
+  const irregulars: Record<string, string> = {
+    child: 'children',
+    person: 'people',
+    man: 'men',
+    woman: 'women',
+    foot: 'feet',
+    tooth: 'teeth',
+    goose: 'geese',
+    mouse: 'mice',
+    ox: 'oxen',
+    deer: 'deer',
+    sheep: 'sheep',
+    // Add more irregular plurals as needed
+  };
+
+  // Check if the word is an irregular plural
+  if (irregulars[word.toLowerCase()]) {
+    return irregulars[word.toLowerCase()];
+  }
+
+  // Check for common English plural rules
+  if (word.endsWith('s') || word.endsWith('ch') || word.endsWith('sh') || word.endsWith('x') || word.endsWith('z')) {
+    return word + 'es'; // Add 'es' for words ending in 's', 'ch', 'sh', 'x', or 'z'
+  } else if (word.endsWith('y') && !['a', 'e', 'i', 'o', 'u'].includes(word[word.length - 2])) {
+    return word.slice(0, -1) + 'ies'; // Change 'y' to 'ies' if preceded by a consonant
+  } else {
+    return word + 's'; // Add 's' for regular plurals
+  }
+}
