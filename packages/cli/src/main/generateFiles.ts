@@ -330,7 +330,7 @@ const paths = {
 
 async function updateConfig(keyword: any, Keyword: any, remove = false) {
   const file = 'src/config.ts';
-  const input = `new ${Keyword}Route(),`;
+  const input = `${Keyword}Route,`;
   // const input = `${keyword}s: new ${Keyword}Route(true),`;
   const importLine = `import ${Keyword}Route from '@routes/${keyword}.route';`;
   try {
