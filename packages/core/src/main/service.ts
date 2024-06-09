@@ -1,4 +1,4 @@
-import Repository from './data/mongooseRepository';
+import { Repository } from './data/mongooseRepository';
 // single model methods
 export abstract class Service<T, R extends Repository<T>> {
   protected abstract repository: R;
