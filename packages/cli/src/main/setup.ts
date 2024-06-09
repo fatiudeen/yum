@@ -66,7 +66,7 @@ import { PORT, DB_URI, appOptions } from '@config';
 optionsValidation()
 
 
-const app = new App(appOptions);
+const app = App.instance(appOptions);
 
 app.listen(<number>(<unknown>PORT), DB_URI);`;
 
@@ -155,8 +155,8 @@ module.exports = {
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
   setupFilesAfterEnv: [
     './src/__test__/__mocks__/mockDb.ts',
-    './src/__test__/__mocks__/googleapisMock.ts',
-    './src/__test__/__mocks__/mailMock.ts',
+    // './src/__test__/__mocks__/googleapisMock.ts',
+    // './src/__test__/__mocks__/mailMock.ts',
   ],
   // coverageThreshold: { global: { lines: 70 } },
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
@@ -432,9 +432,9 @@ async function updatePackageJson() {
   const payload = requireJSON5(packagePath);
 
   const script = {
-    test: 'cross-env NODE_ENV=test TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 jest --detectOpenHandles --debug --coverage --updateSnapshot --forceExit',
+    test: 'cross-env NODE_ENV=test TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 jest --detectOpenHandles  --coverage --updateSnapshot --forceExit',
     'test:debug':
-      'cross-env NODE_ENV=test TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 jest --detectOpenHandles --coverage --updateSnapshot --forceExit',
+      'cross-env NODE_ENV=test TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 jest --detectOpenHandles --debug --coverage --updateSnapshot --forceExit',
     dev: 'cross-env NODE_ENV=development TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 nodemon src/index.ts',
     build: 'tsc -p . && tsc-alias',
     start: 'node index.js',

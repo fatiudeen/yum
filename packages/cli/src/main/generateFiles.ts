@@ -15,7 +15,7 @@ const paths = {
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
     
     export default class <Keyword>Repository extends Repository<<Keyword>Interface> {
-      protected model = ModelFactory<<Keyword>Interface>>('<Keyword>', { example: String})
+      protected model = ModelFactory<<Keyword>Interface>('<Keyword>', { example: String})
     }
     `,
   'src/controllers/<keyword>.controller.ts': `/* eslint-disable no-underscore-dangle */
@@ -62,7 +62,7 @@ const paths = {
     
     const authService = new AuthService();
     const <keyword>Service = new <Keyword>Service();
-    const app = new App(appOptions).instance();
+    const app = App.instance(appOptions).instance();
     
     let authentication: object;
     const baseUrl = '/api/v1/<keyword>s';
@@ -181,7 +181,7 @@ const paths = {
     logger.silent = true;
     
     const <keyword>Service = new <Keyword>Service();
-    const app = new App(appOptions).instance();
+    const app =  App.instance(appOptions).instance();
     
     const baseUrl = '/api/v1/<keyword>s';
     // let userId: string;
