@@ -19,14 +19,19 @@ import * as Config from '../config';
 // import { rateLimiter } from '@middlewares/rateLimiter';
 import { Route } from './router';
 import { BucketService } from '@yumm/helpers';
+import { ParamsDictionary } from 'express-serve-static-core';
+import { ParsedQs } from 'qs';
 // import session from 'express-session';
 // import visitCount from '@middlewares/visitCount';
 
 // eslint-disable-next-line import/no-extraneous-dependencies, import/no-unresolved
 // const MongoDBStore = require('connect-mongodb-session')(session);
 
+type AppOptions = { routes?: Array<Route<any>>; middlewares?: Array<RequestHandler> };
+
 export class App {
   private app: Application;
+  static _instance: Application;
   useSocket = Config.OPTIONS.USE_SOCKETS;
   useAnalytics = Config.OPTIONS.USE_ANALYTICS;
   io?: Server;
@@ -35,7 +40,7 @@ export class App {
   private middlewares: Array<RequestHandler> = [];
 
   httpServer;
-  constructor({ routes, middlewares }: { routes?: Array<Route<any>>; middlewares?: Array<RequestHandler> } = {}) {
+  private constructor({ routes, middlewares }: AppOptions = { routes: [], middlewares: [] }) {
     this.app = express();
     if (this.useSocket) {
       this.httpServer = createServer(this.app);
@@ -142,7 +147,11 @@ export class App {
     });
   }
 
-  public instance() {
-    return this.app;
+  static instance(opts: AppOptions = { routes: [], middlewares: [] }) {
+    if (!App._instance) {
+      App._instance = new App(opts).app;
+      return App._instance;
+    }
+    return App._instance;
   }
 }
