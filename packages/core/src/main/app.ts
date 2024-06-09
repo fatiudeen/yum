@@ -27,7 +27,7 @@ import { ParsedQs } from 'qs';
 // eslint-disable-next-line import/no-extraneous-dependencies, import/no-unresolved
 // const MongoDBStore = require('connect-mongodb-session')(session);
 
-type AppOptions = { routes?: Array<Route<any>>; middlewares?: Array<RequestHandler> };
+type AppOptions = { routes?: Array<new (...args: any[]) => Route<any>>; middlewares?: Array<RequestHandler> };
 
 export class App {
   private app: Application;
@@ -36,7 +36,7 @@ export class App {
   useAnalytics = Config.OPTIONS.USE_ANALYTICS;
   io?: Server;
   private apiVersion = '/api/v1';
-  private routes: Array<Route<any>> = [];
+  private routes: Array<new (...args: any[]) => Route<any>> = []; // Array<Route<any>> = [];
   private middlewares: Array<RequestHandler> = [];
 
   httpServer;
@@ -67,7 +67,8 @@ export class App {
       this.app.use(`${this.apiVersion}/${Config.MULTER_STORAGE_PATH}`, express.static(Config.ROOT_PATH));
     }
     this.routes.forEach((route) => {
-      this.app.use(`${this.apiVersion}/${route.path}`, route.initRoutes());
+      const r = new route();
+      this.app.use(`${this.apiVersion}/${r.path}`, r.initRoutes());
     });
     // this.app.use('/docs', docs);
     this.app.get('/', (req, res) => {
