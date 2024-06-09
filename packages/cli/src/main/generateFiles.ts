@@ -196,6 +196,7 @@ const paths = {
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
     
     class <Keyword>Route extends Route<<Keyword>Interface> {
+      path = '<keyword>'
       controller = new <Keyword>Controller('<keyword>');
       dto = <keyword>RequestDTO;
       initRoutes() {
@@ -214,7 +215,7 @@ const paths = {
 
 async function updateAppTs(keyword: any, Keyword: any, remove = false) {
   const file = 'src/index.ts';
-  const input = `new ${Keyword}Route(true),`;
+  const input = `new ${Keyword}Route(),`;
   // const input = `${keyword}s: new ${Keyword}Route(true),`;
   const importLine = `import ${Keyword}Route from '@routes/${keyword}.route';`;
   try {
@@ -280,10 +281,17 @@ function getAllFilesInDir(ignore: string[] = []) {
 
 export const newCrud = async (keyword: string) => {
   try {
+    const ora = await import('ora');
+
+    const spinner = ora.default(`creating crud: ${keyword}`).start();
+
     const packagePath = nodePath.join(process.cwd(), 'yummConfig.json');
-    const exists = fs.exists(packagePath);
+    const exists = await fs.exists(packagePath);
     if (!exists) {
-      console.log('Invalid Yumm Project');
+      spinner.info('yumm project not found');
+      spinner.info('to create a yumm project run: npx @yumm/cli create-app name-of-project');
+      spinner.fail('Invalid Yumm project');
+      return;
     }
     keyword = keyword.toLowerCase();
     const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);

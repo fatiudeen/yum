@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "@yumm/cli": "^0.0.17",
-        "@yumm/core": "^0.0.8",
+        "@yumm/core": "^0.0.10",
         "@yumm/helpers": "^1.0.8",
         "@yumm/utils": "^1.0.12"
     },
