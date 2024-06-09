@@ -43,6 +43,13 @@ const depsPackagesToInstall = [
   '@typescript-eslint/eslint-plugin',
   'nodemon',
   'cross-env',
+  'supertest',
+  'ts-jest',
+  'jest',
+  '@types/supertest',
+  '@types/jest',
+  '@faker-js/faker',
+  'mongodb-memory-server',
 ];
 
 const env = `
@@ -54,23 +61,33 @@ JWT_KEY='secret'
 
 const index = `
 import {App, optionsValidation} from '@yumm/core'
-import { PORT, DB_URI } from '@config';
+import { PORT, DB_URI, appOptions } from '@config';
 
 optionsValidation()
 
-const options = {
-  routes: [],
-  middlewares: []
-}
-const app = new App(options);
+
+const app = new App(appOptions);
 
 app.listen(<number>(<unknown>PORT), DB_URI);`;
 
+const prettier = `
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "trailingComma": "all",
+  "singleQuote": true,
+  "semi": true,
+  "printWidth": 120
+}
+`;
+
 const config = `
-import { config } from 'dotenv';
+import 'dotenv/config';
 
-config();
-
+export const appOptions = {
+  routes: [],
+  middlewares: []
+}
 
 export const {
   PORT,
@@ -102,6 +119,138 @@ export const {
 } = <Record<string, string>>process.env;
 `;
 
+const jest = `
+// /** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
+const pathsToModuleNameMapper = require('ts-jest').pathsToModuleNameMapper;
+const requireJSON5 = require('require-json5');
+
+const tsconfig = requireJSON5('./tsconfig.json')
+const compilerOptions = tsconfig.compilerOptions;
+
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.ts?$': [
+      'ts-jest',
+      {
+        isolatedModules: true,
+        tsconfig: 'tsconfig.test.json',
+        cache: true,
+        // diagnostics: false,
+        transpileOnly: true,
+      },
+    ],
+  },
+  verbose: true,
+  clearMocks: true,
+  moduleDirectories: ['node_modules', '<rootDir>/src'],
+  modulePathIgnorePatterns: [
+    './src/__test__/__mocks__',
+    './src/__test__/__utils__',
+    './dist',
+    './node_modules',
+  ],
+  modulePaths: [compilerOptions.baseUrl],
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
+  setupFilesAfterEnv: [
+    './src/__test__/__mocks__/mockDb.ts',
+    './src/__test__/__mocks__/googleapisMock.ts',
+    './src/__test__/__mocks__/mailMock.ts',
+  ],
+  // coverageThreshold: { global: { lines: 70 } },
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
+};
+`;
+
+const mockDb = `
+/* eslint-disable no-restricted-syntax */
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { JWT_KEY } from '@config';
+
+beforeAll(async () => {
+  process.env.JWT_SECRET = JWT_KEY;
+
+  const mongoServer = await MongoMemoryServer.create();
+  await mongoose.connect(mongoServer.getUri());
+}, 10000);
+
+beforeEach(async () => {
+  const collections = await mongoose.connection.db.collections();
+
+  for await (const collection of collections) {
+    await collection.deleteMany({});
+  }
+});
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoose.connection.close();
+});
+
+jest.setTimeout(30000);
+
+`;
+
+const mockMail = `
+import { SMTPMailer } from '@yumm/helpers';
+
+const data = {
+  status: 201,
+  id: '<20220612040030.590cb653cdd3359f@sandboxe356c98d9eb1425087f300dd7df32c68.mailgun.org>',
+  message: 'Queued. Thank you.',
+} as any;
+
+var opts: any
+// export default jest.spyOn(new SMTPMailer(opts)!, 'send').mockResolvedValue(data);
+export default jest.spyOn({ nothing: ()=> {return undefined}}, 'nothing')
+
+`;
+
+const mockGoogleApis = `
+// const googleapisMock: any = jest.createMockFromModule('googleapis');
+
+export default jest.mock('googleapis', () => {
+  const googleApisMock = {
+    google: {
+      // Mock implementation can include any desired behavior
+      auth: {
+        OAuth2: jest.fn().mockImplementation(() => ({
+          generateAuthUrl: jest.fn(() => 'mocked-auth-url'),
+          getToken: jest.fn(() => ({ tokens: { access_token: 'mocked-access-token' } })),
+        })),
+      },
+
+      oauth2: {
+        userinfo: {
+          v2: {
+            me: {
+              get: jest.fn().mockResolvedValue({
+                data: {
+                  email: 'mocked-email@example.com',
+                  id: 'mocked-user-id',
+                  given_name: 'John',
+                  family_name: 'Doe',
+                  picture: 'mocked-avatar-url',
+                },
+              }),
+            },
+          },
+        },
+      },
+    },
+  };
+  return googleApisMock;
+});
+
+`;
+
+const testTsConfig = `
+{
+  "extends": "./tsconfig.json",
+}
+`;
+
 export async function createProject(projectName: string) {
   const ora = await import('ora');
   const execAsync = promisify(exec);
@@ -118,6 +267,13 @@ export async function createProject(projectName: string) {
     await fs.writeFile('src/index.ts', index);
     await fs.writeFile('src/config.ts', config);
     await fs.writeFile('.env.dev', env);
+    await fs.writeFile('.env.test', env);
+    await fs.writeFile('.prettierrc', prettier);
+    await fs.writeFile('jest.config.js', jest);
+    await fs.writeFile('tsconfig.test.json', testTsConfig);
+    await fs.writeFile('src/__test__/__mocks__/mockDb.ts', mockDb);
+    await fs.writeFile('src/__test__/__mocks__/mailMock.ts', mockMail);
+    // await fs.writeFile('src/__test__/__mocks__/googleapisMock.ts', mockGoogleApis);
 
     await execAsync('npm init -y');
     await execAsync('npx tsc --init');
@@ -136,6 +292,7 @@ export async function createProject(projectName: string) {
     await execAsync(`npm install -D --silent ${depsPackagesToInstall.join(' ')}`);
     spinner.succeed('done');
   } catch (err) {
+    console.log(err);
     spinner.fail('error while creating project');
   }
 }
@@ -276,6 +433,8 @@ async function updatePackageJson() {
 
   const script = {
     test: 'cross-env NODE_ENV=test TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 jest --detectOpenHandles --debug --coverage --updateSnapshot --forceExit',
+    'test:debug':
+      'cross-env NODE_ENV=test TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 jest --detectOpenHandles --coverage --updateSnapshot --forceExit',
     dev: 'cross-env NODE_ENV=development TS_NODE_FILES=true AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE=1 nodemon src/index.ts',
     build: 'tsc -p . && tsc-alias',
     start: 'node index.js',

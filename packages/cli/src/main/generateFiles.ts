@@ -15,7 +15,7 @@ const paths = {
     import { <Keyword>Interface } from '@interfaces/<Keyword>.Interface';
     
     export default class <Keyword>Repository extends Repository<<Keyword>Interface> {
-      protected model = ModelFactory('<Keyword>', { example: String})
+      protected model = ModelFactory<<Keyword>Interface>>('<Keyword>', { example: String})
     }
     `,
   'src/controllers/<keyword>.controller.ts': `/* eslint-disable no-underscore-dangle */
@@ -38,20 +38,22 @@ const paths = {
     export const valid<Keyword>Id = faker.database.mongodbObjectId().toString();
 
     export const valid<Keyword> = {
-    example: faker.random.word()
+    example: faker.lorem.word()
     };
 
     export const invalid<Keyword> = {
-    examples: faker.random.word()
+    examples: faker.lorem.word()
     };
 
     export const valid<Keyword>UpdateData = {
-        example: faker.random.word()
+        example: faker.lorem.word()
     };`,
-  'src/__test__/<keyword>.test.ts': `import supertest from 'supertest';
-    import { logger } from '@utils/logger';
+  'src/__test__/<keyword>.test.ts': [
+    `import supertest from 'supertest';
+    import { logger } from '@yumm/utils';
     import <Keyword>Service from '@services/<keyword>.service';
-    import App from '../app';
+    import { App } from "@yumm/core";
+    import { appOptions } from "@config";
     import AuthService from '../services/auth.service';
     import { validUser } from './__fixtures__/user';
     import { valid<Keyword>, invalid<Keyword>, valid<Keyword>UpdateData, invalid<Keyword>Id } from './__fixtures__/<keyword>';
@@ -60,7 +62,7 @@ const paths = {
     
     const authService = new AuthService();
     const <keyword>Service = new <Keyword>Service();
-    const app = new App().instance();
+    const app = new App(appOptions).instance();
     
     let authentication: object;
     const baseUrl = '/api/v1/<keyword>s';
@@ -168,6 +170,119 @@ const paths = {
         });
       });
     });`,
+    `
+    import supertest from 'supertest';
+    import { logger } from '@yumm/utils';
+    import <Keyword>Service from '@services/<keyword>.service';
+    import { App } from "@yumm/core";
+    import { appOptions } from "@config";
+    import { valid<Keyword>, invalid<Keyword>, valid<Keyword>UpdateData, invalid<Keyword>Id } from './__fixtures__/<keyword>';
+    
+    logger.silent = true;
+    
+    const <keyword>Service = new <Keyword>Service();
+    const app = new App(appOptions).instance();
+    
+    const baseUrl = '/api/v1/<keyword>s';
+    // let userId: string;
+    let <keyword>Id: string;
+    
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      <keyword>Id = (await <keyword>Service.create({ ...valid<Keyword>} as any))._id;
+
+    });
+    
+    describe(\`\${'<keyword>'.toUpperCase()} ::\`, () => {
+      describe(\`POST \${baseUrl} ==========>>>>\`, () => {
+        describe('given a valid <keyword> create a <keyword>, ', () => {
+          it('should create <keyword> return 200', async () => {
+            const { statusCode, body } = await supertest(app)
+              .post(baseUrl)
+              .send({ ...valid<Keyword> });
+    
+            //   deepLog(body)
+    
+            expect(statusCode).toBe(201);
+            expect(body.success).toEqual(true);
+          });
+        });
+    
+        describe('given an invalid <keyword>', () => {
+          it('should return 400', async () => {
+            const { statusCode, body } = await supertest(app)
+              .post(baseUrl)
+              .send({ ...invalid<Keyword> });
+    
+            // deepLog(body);
+    
+            expect(statusCode).toBe(400);
+            expect(body.success).toEqual(false);
+          });
+        });
+      });
+      describe(\`GET \${baseUrl} ==========>>>>\`, () => {
+        describe('given a valid token and <keyword>s exists', () => {
+          it('should return 200 and a non empty array', async () => {
+            const { statusCode, body } = await supertest(app).get(baseUrl);
+    
+            expect(statusCode).toBe(200);
+            expect(body.success).toEqual(true);
+          });
+        });
+    
+        describe('given a valid token', () => {
+          it('should return 200, and an empty array', async () => {
+            const { statusCode, body } = await supertest(app).get(baseUrl);
+    
+            expect(statusCode).toBe(200);
+            expect(body.success).toEqual(true);
+          });
+        });
+      });
+      describe(\`GET \${baseUrl}/:<keyword>Id ==========>>>>\`, () => {
+        describe('given a valid token a valid <keyword>Id', () => {
+          it('should return 200 and a ', async () => {
+            const { statusCode, body } = await supertest(app).get(\`\${baseUrl}/\${<keyword>Id}\`);
+    
+            expect(statusCode).toBe(200);
+            expect(body.success).toEqual(true);
+          });
+        });
+    
+        describe('given a valid token and an invalid <keyword>Id', () => {
+          it('should return 404', async () => {
+            const { statusCode, body } = await supertest(app).get(\`\${baseUrl}/\${invalid<Keyword>Id}\`);
+    
+            expect(statusCode).toBe(404);
+            expect(body.success).toEqual(false);
+          });
+        });
+      });
+      describe(\`PUT \${baseUrl}/:<keyword>Id ==========>>>>\`, () => {
+        describe('given a valid token a valid <keyword>Id', () => {
+          it('should update and return 200 and a ', async () => {
+            const { statusCode, body } = await supertest(app)
+              .put(\`\${baseUrl}/\${<keyword>Id}\`)
+              .send({ ...valid<Keyword>UpdateData });
+    
+            expect(statusCode).toBe(200);
+            expect(body.success).toEqual(true);
+          });
+        });
+      });
+      describe(\`DELETE \${baseUrl}/:<keyword>Id ==========>>>>\`, () => {
+        describe('given a valid token a valid <keyword>Id', () => {
+          it('should delete and return 200 and a ', async () => {
+            const { statusCode, body } = await supertest(app).delete(\`\${baseUrl}/\${<keyword>Id}\`);
+    
+            expect(statusCode).toBe(200);
+            expect(body.success).toEqual(true);
+          });
+        });
+      });
+    });`,
+  ],
   'src/dtos/<keyword>.dto.ts': `import { body, param } from 'express-validator';
 
     export const <keyword>RequestDTO = {
@@ -213,8 +328,8 @@ const paths = {
     export default <Keyword>Route;`,
 };
 
-async function updateAppTs(keyword: any, Keyword: any, remove = false) {
-  const file = 'src/index.ts';
+async function updateConfig(keyword: any, Keyword: any, remove = false) {
+  const file = 'src/config.ts';
   const input = `new ${Keyword}Route(),`;
   // const input = `${keyword}s: new ${Keyword}Route(true),`;
   const importLine = `import ${Keyword}Route from '@routes/${keyword}.route';`;
@@ -226,7 +341,7 @@ async function updateAppTs(keyword: any, Keyword: any, remove = false) {
     } else {
       updatedContent = data
         .replace(`routes: [`, `routes: [ ${input}`)
-        .replace(`import { PORT, DB_URI } from '@config';`, `import { PORT, DB_URI } from '@config'; ${importLine}`);
+        .replace(`import 'dotenv/config';`, `import 'dotenv/config'; ${importLine}`);
     }
     await fs.writeFile(file, updatedContent, 'utf8');
     return 'Index updated successfully.';
@@ -257,27 +372,27 @@ async function removeFile(filePath: fs.PathLike) {
   }
 }
 
-function getAllFilesInDir(ignore: string[] = []) {
-  if (!Array.isArray(ignore)) {
-    console.error(`Error:`, 'ignore must be an array');
-  }
-  const dirPath = 'src/api/v1/models';
-  try {
-    // Read the directory
-    const files = fs.readdirSync(dirPath);
+// function getAllFilesInDir(ignore: string[] = []) {
+//   if (!Array.isArray(ignore)) {
+//     console.error(`Error:`, 'ignore must be an array');
+//   }
+//   const dirPath = 'src/api/v1/models';
+//   try {
+//     // Read the directory
+//     const files = fs.readdirSync(dirPath);
 
-    // Filter out directories, leaving only files
-    const fileNames = files
-      .filter((file) => fs.statSync(nodePath.join(dirPath, file)).isFile())
-      .map((file) => file.split('.')[0])
-      .filter((file) => !ignore.includes(file));
+//     // Filter out directories, leaving only files
+//     const fileNames = files
+//       .filter((file) => fs.statSync(nodePath.join(dirPath, file)).isFile())
+//       .map((file) => file.split('.')[0])
+//       .filter((file) => !ignore.includes(file));
 
-    return fileNames;
-  } catch (error) {
-    console.error('Error reading directory:', error);
-    return [];
-  }
-}
+//     return fileNames;
+//   } catch (error) {
+//     console.error('Error reading directory:', error);
+//     return [];
+//   }
+// }
 
 export const newCrud = async (keyword: string) => {
   try {
@@ -298,10 +413,14 @@ export const newCrud = async (keyword: string) => {
     let _paths = '';
     for await (const [path, content] of Object.entries(paths)) {
       const _path = path.replace('<keyword>', keyword).replace('<Keyword>', Keyword);
-      await createFile(_path, content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
+      if (Array.isArray(content)) {
+        await createFile(_path, content[1].replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
+      } else {
+        await createFile(_path, content.replaceAll('<keyword>', keyword).replaceAll('<Keyword>', Keyword));
+      }
       _paths = `${_paths} ${_path}`;
     }
-    await updateAppTs(keyword, Keyword);
+    await updateConfig(keyword, Keyword);
 
     // eslint-disable-next-line no-unused-vars
     const { stdout, stderr } = await execAsync(`npm run prettier -- ${_paths} src/index.ts`);
@@ -309,7 +428,8 @@ export const newCrud = async (keyword: string) => {
       console.error(`Error Formatting Files`);
       return;
     }
-    console.log(`Files Formatted`);
+    spinner.info(` ${keyword} Files Formatted`);
+    spinner.succeed('done');
   } catch (err: any) {
     console.log(`Error Caught`);
 
@@ -325,7 +445,7 @@ export const removeCrud = async (keyword: string) => {
   for (const path of Object.keys(paths)) {
     await removeFile(path.replace('<keyword>', keyword).replace('<Keyword>', Keyword));
   }
-  updateAppTs(keyword, Keyword, true);
+  updateConfig(keyword, Keyword, true);
   // eslint-disable-next-line no-unused-vars
   const { stdout, stderr } = await execAsync(`npm run prettier -- src/app.ts`);
   if (stderr) {
