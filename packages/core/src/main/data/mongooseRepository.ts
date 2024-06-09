@@ -8,7 +8,7 @@ import { Model, Types } from 'mongoose';
 
 // import shortUUID from 'short-uuid';
 
-export default abstract class Repository<T> {
+export abstract class Repository<T> {
   protected abstract model: Model<T>;
 
   find(_query?: Partial<T> | Array<string> | { [K in keyof DocType<T>]?: Array<DocType<T>[K]> }) {
