@@ -6,7 +6,7 @@ import path from 'path';
 
 function find(...args: string[]) {
   const rel = path.join.apply(null, [].slice.call(args));
-  return findStartingWith(path.dirname(require.main!.filename), rel);
+  return findStartingWith(path.dirname(require.main?.filename || module.filename), rel);
 }
 
 function findStartingWith(start: string, rel: string) {
