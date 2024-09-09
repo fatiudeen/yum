@@ -6,18 +6,19 @@ import {
   DefaultSchemaOptions,
   Document,
   IfAny,
-  ObtainDocumentType,
   Require_id,
-  ResolveSchemaOptions,
   SchemaDefinition,
   SchemaDefinitionType,
+  ApplySchemaOptions,
+  ObtainDocumentType,
+  ResolveSchemaOptions,
   SchemaOptions,
 } from 'mongoose';
 
-export type ISchemaDefinition<T = any> =
-  | ObtainDocumentType<any, T, ResolveSchemaOptions<DefaultSchemaOptions>>
-  | SchemaDefinition<SchemaDefinitionType<T>>
-  | undefined;
+// export type ISchemaDefinition<T = any> =
+//   | ObtainDocumentType<any, T, ResolveSchemaOptions<DefaultSchemaOptions>>
+//   | SchemaDefinition<SchemaDefinitionType<T>>
+//   | undefined;
 
 export type ISchemaOptions<T = any> =
   | ResolveSchemaOptions<DefaultSchemaOptions>
@@ -36,15 +37,26 @@ export type ISchemaOptions<T = any> =
     >
   | undefined;
 
-export const ModelFactory = <T>(
+export const ModelFactory = <
+  T,
+  TSchemaOptions = DefaultSchemaOptions,
+  DocType extends ApplySchemaOptions<
+    ObtainDocumentType<DocType, T, ResolveSchemaOptions<TSchemaOptions>>,
+    ResolveSchemaOptions<TSchemaOptions>
+  > = ApplySchemaOptions<
+    ObtainDocumentType<any, T, ResolveSchemaOptions<TSchemaOptions>>,
+    ResolveSchemaOptions<TSchemaOptions>
+  >,
+>(
   modelName: string,
-  schemaDefinition: ISchemaDefinition<T>,
+  schemaDefinitions: SchemaDefinition<SchemaDefinitionType<T>, T> | DocType,
 
   schemaOptions?: ISchemaOptions<T>,
+  // schemaOptions,
 ) => {
-  const schema = new Schema<T>(schemaDefinition, {
+  const schema = new Schema<T>(schemaDefinitions, {
     ...schemaOptions,
-    timestamps: true,
+    // timestamps: true,
   });
   return <Model<T>>model(modelName, schema);
 };

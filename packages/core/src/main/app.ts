@@ -27,7 +27,7 @@ import { ParsedQs } from 'qs';
 // eslint-disable-next-line import/no-extraneous-dependencies, import/no-unresolved
 // const MongoDBStore = require('connect-mongodb-session')(session);
 
-type AppOptions = { routes?: Array<new (...args: any[]) => Route<any>>; middlewares?: Array<RequestHandler> };
+export type AppOptions = { routes?: Array<new (...args: any[]) => Route<any>>; middlewares?: Array<RequestHandler> };
 
 export class App {
   private app: Application;
