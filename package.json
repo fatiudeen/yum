@@ -28,8 +28,8 @@
         "eslint-plugin-prettier": "^5.0.0"
     },
     "dependencies": {
-        "@yumm/cli": "^0.0.17",
-        "@yumm/core": "^0.0.13",
+        "@yumm/cli": "^0.0.18",
+        "@yumm/core": "^0.0.16",
         "@yumm/helpers": "^1.0.8",
         "@yumm/utils": "^1.0.12"
     },

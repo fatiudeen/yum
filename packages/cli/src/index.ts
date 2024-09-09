@@ -2,7 +2,7 @@
 
 import { program } from 'commander';
 import { createProject } from './main/setup';
-import { removeCrud, newCrud } from './main/generateFiles';
+import { removeCrud, newCrud, createAuth } from './main/generateFiles';
 
 const ver = process.env.npm_package_version || '0.0.1';
 
@@ -13,5 +13,7 @@ program.command('create-app').arguments('<project-name>').action(createProject);
 program.command('rm-crud').arguments('<keyword>').action(removeCrud);
 
 program.command('create-crud').arguments('<keyword>').option('--use-auth').action(newCrud);
+
+program.command('auth').action(createAuth);
 
 program.parse(process.argv);

@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import nodePath from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import readline from 'readline';
+// import { oraPromise } from 'ora';
 
 const execAsync = promisify(exec);
 // Define content and path mappings for each keyword
@@ -340,13 +342,15 @@ async function updateConfig(keyword: any, Keyword: any, remove = false) {
   const importLine = `import ${Keyword}Route from '@routes/${keyword}.route';`;
   try {
     const data = await fs.readFile(file, 'utf8');
-    let updatedContent: string | NodeJS.ArrayBufferView;
+    let updatedContent: string | NodeJS.ArrayBufferView = data;
     if (remove) {
       updatedContent = data.replace(`${importLine}\n`, '').replace(`${input}`, '');
     } else {
-      updatedContent = data
-        .replace(`routes: [`, `routes: [ ${input},`)
-        .replace(`import 'dotenv/config';`, `import 'dotenv/config'; ${importLine}`);
+      if (!data.includes(input)) {
+        updatedContent = data
+          .replace(`routes: [`, `routes: [ ${input},`)
+          .replace(`import 'dotenv/config';`, `import 'dotenv/config'; ${importLine}`);
+      }
     }
     await fs.writeFile(file, updatedContent, 'utf8');
     return 'Index updated successfully.';
@@ -413,6 +417,8 @@ export const newCrud = async (keyword: string, option: any) => {
       return;
     }
     keyword = keyword.toLowerCase();
+    // if (keyword === 'auth' || keyword === 'authentication') throw new Error('auth is a reserved keyword');
+
     const keywords = pluralize(keyword);
     const Keyword = keyword.charAt(0).toUpperCase() + keyword.slice(1);
     // const Keywords = pluralize(Keyword); No usage for now
@@ -422,13 +428,16 @@ export const newCrud = async (keyword: string, option: any) => {
     for await (const [path, content] of Object.entries(paths)) {
       const _path = path.replace('<keyword>', keyword).replace('<Keyword>', Keyword);
       if (Array.isArray(content)) {
+        const idx = option.useAuth ? 0 : 1;
+
         info = await createFile(
           _path,
-          content[1]
+          content[idx]
             .replaceAll('<keyword>', keyword)
             .replaceAll('<Keyword>', Keyword)
             .replaceAll('<keywords>', keywords),
         );
+        spinner.info(info);
         spinner.info(info);
       } else {
         info = await createFile(
@@ -443,11 +452,8 @@ export const newCrud = async (keyword: string, option: any) => {
     spinner.info(info);
 
     // eslint-disable-next-line no-unused-vars
-    const { stdout, stderr } = await execAsync(`npm run prettier -- ${_paths} src/config.ts`);
-    if (stderr) {
-      // console.error(`Error Formatting Files`);
-      return;
-    }
+    const cmd = await execAsync(`npm run prettier -- ${_paths} src/config.ts`);
+
     spinner.info(` ${keyword} Files Formatted`);
     spinner.succeed('done');
   } catch (err: any) {
@@ -469,14 +475,9 @@ export const removeCrud = async (keyword: string) => {
       spinner.info(info);
     }
     updateConfig(keyword, Keyword, true);
-    // eslint-disable-next-line no-unused-vars
-    const { stdout, stderr } = await execAsync(`npm run prettier -- src/config.ts`);
-    if (stderr) {
-      // console.error(`Error Formatting Files`);
-      return;
-    } else {
-      spinner.info('Formatting Files');
-    }
+    await execAsync(`npm run prettier -- src/config.ts`);
+
+    spinner.info('Formatting Files');
 
     spinner.succeed(`Crud Removed`);
   } catch (err: any) {
@@ -531,3 +532,51 @@ function pluralize(word: string): string {
     return word + 's'; // Add 's' for regular plurals
   }
 }
+
+export const createAuth = async () => {};
+
+// type ORA = typeof import("ora", { with: { "resolution-mode": "import" } })
+
+// const runCommand = async (command: string, ora: any) => {
+//   // const ora = await import('ora');
+
+//   const spinner = ora.default({ text: `creating crud:`, discardStdin: false }).start();
+
+//   try {
+//     const { stdout, stderr } = exec(command);
+
+//     const stdoutStream = readline.createInterface({
+//       input: stdout!,
+//       output: process.stdout,
+//     });
+
+//     stdoutStream.on('line', (line) => {
+//       // spinner.info(`STDOUT: ${line}`);
+//       // spinner.clear();
+
+//       // spinner.text = `STDOUT: ${line}`;
+//       console.log(`STDOUT: ${line}`);
+//     });
+
+//     const stderrStream = readline.createInterface({
+//       input: stderr!,
+//       output: process.stderr,
+//     });
+//     // spinner.prefixText = 'TEST-PREFIX: ';
+//     stderrStream.on('line', (line) => {
+//       // spinner.info(`STDERR: ${line}`);
+//       spinner.clear();
+//       spinner.text = `STDERR: ${line}`;
+//     });
+
+//     await new Promise((resolve) => {
+//       stdoutStream.on('close', resolve);
+//       stderrStream.on('close', resolve);
+//     });
+
+//     spinner.fail('ended');
+//     console.log(`Command executed successfully.`);
+//   } catch (error) {
+//     console.error(`Error executing command: ${error}`);
+//   }
+// };

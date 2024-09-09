@@ -60,13 +60,13 @@ JWT_KEY='secret'
 `;
 
 const index = `
-import {App, optionsValidation} from '@yumm/core'
+import {App, optionsValidation, AppOptions} from '@yumm/core'
 import { PORT, DB_URI, appOptions } from '@config';
 
 optionsValidation()
 
 
-const app = App.instance(appOptions);
+const app = App.instance(appOptions as AppOptions);
 
 app.listen(<number>(<unknown>PORT), DB_URI);`;
 
@@ -251,6 +251,15 @@ const testTsConfig = `
 }
 `;
 
+const gitIgnore = `
+node_modules
+dist
+.env.*
+logs
+coverage
+.vscode
+`;
+
 export async function createProject(projectName: string) {
   const ora = await import('ora');
   const execAsync = promisify(exec);
@@ -269,6 +278,7 @@ export async function createProject(projectName: string) {
     await fs.writeFile('.env.dev', env);
     await fs.writeFile('.env.test', env);
     await fs.writeFile('.prettierrc', prettier);
+    await fs.writeFile('.gitignore', gitIgnore);
     await fs.writeFile('jest.config.js', jest);
     await fs.writeFile('tsconfig.test.json', testTsConfig);
     await fs.writeFile('src/__test__/__mocks__/mockDb.ts', mockDb);
@@ -277,6 +287,7 @@ export async function createProject(projectName: string) {
 
     await execAsync('npm init -y');
     await execAsync('npx tsc --init');
+
     await updateTsConfig();
     spinner.text = 'configured ts-config';
     await createNodemonJson();
@@ -290,6 +301,8 @@ export async function createProject(projectName: string) {
 
     await execAsync(`npm install --silent ${packagesToInstall.join(' ')}`);
     await execAsync(`npm install -D --silent ${depsPackagesToInstall.join(' ')}`);
+    await execAsync(`npm run prettier --  ./**/*.ts`);
+    await execAsync(`git init`);
     spinner.succeed('done');
   } catch (err) {
     console.log(err);

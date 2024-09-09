@@ -4,7 +4,7 @@ import nodeMailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 type Opts = {
-  smtpService: string;
+  // smtpService: string;
   smtpHostName: string;
   smtpPort: number;
   smtpUsername: string;
@@ -12,50 +12,97 @@ type Opts = {
   domainEmail: string;
 };
 
-export class SMTPMailer {
+export interface EmailHelperInterface {
+  send(param: { to: string; subject?: string; template: string; variables?: Record<string, string> }): Promise<void>;
+}
+
+export interface EmailConfig {
+  provider: 'sendgrid' | 'mailgun' | 'smtp';
+  template: Record<string, string | [string, Record<string, string | number>]>;
+}
+
+type SendData = {
+  to: string;
+  from: string;
+  subject?: string;
+  html?: string;
+  template?: string;
+  header?: Record<string, any>;
+  'h:X-Mailgun-Variables'?: string;
+};
+
+export class SMTPMailer implements EmailHelperInterface {
   private transporter: nodeMailer.Transporter<SMTPTransport.SentMessageInfo>;
 
-  constructor(private options: Opts) {
+  constructor(
+    private cred: Opts,
+    private config: EmailConfig,
+  ) {
     this.transporter = nodeMailer.createTransport(<SMTPTransport.Options>{
-      service: options.smtpService,
-      host: options.smtpHostName,
-      port: options.smtpPort,
-      secure: false, // use TLS
+      // service: cred.smtpService,
+      host: cred.smtpHostName,
+      port: cred.smtpPort,
       auth: {
-        user: this.options.smtpUsername,
-        pass: this.options.smtpPassword,
+        user: cred.smtpUsername,
+        pass: cred.smtpPassword,
       },
-      // tls: {
-      //     // do not fail on invalid certs
-      //     rejectUnauthorized: false,
-      //   }
     });
+
+    this.transporter.verify();
   }
 
-  async send(to: string | string[], subject: string, template: string) {
-    await this.transporter.sendMail({
-      from: this.options.domainEmail,
+  getSendGridHeader(templateId: string, dynamicData: Record<string, string | number>) {
+    return {
+      'X-SMTPAPI': JSON.stringify({
+        filters: {
+          templates: {
+            settings: {
+              enable: 1,
+              template_id: templateId,
+            },
+          },
+        },
+        sub: Object.fromEntries(
+          Object.entries(dynamicData).map(([k, v]) => {
+            return [`%${k}%`, [v]];
+          }),
+        ),
+      }),
+    };
+  }
+
+  async send({ to, subject, template }: { to: string; subject?: string; template: string }) {
+    if (!template) {
+      throw 'provide html template or email template id';
+    }
+
+    if (!(template in this.config.template)) {
+      throw 'invalid template, template not in config';
+    }
+    const data: SendData = {
+      from: this.cred.domainEmail,
       to,
       subject,
-      // text,
-      html: template,
-    });
-  }
-  // async verifyEmail(user: UserInterface) {
-  //   // eslint-disable-next-line no-useless-catch
-  //   try {
-  //     await this.send(user.email, 'VERIFY YOUR EMAIL ADDRESS', 'example');
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+      // html: template,
+    };
 
-  // async sendResetPassword(user: UserInterface) {
-  //   // eslint-disable-next-line no-useless-catch
-  //   try {
-  //     await this.send(user.email, 'PASSWORD RESET TOKEN', 'example');
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+    const htmlOrTemplate = this.config.template[template];
+
+    switch (this.config.provider) {
+      case 'sendgrid':
+        typeof htmlOrTemplate === 'string'
+          ? (data['html'] = htmlOrTemplate)
+          : (data['header'] = this.getSendGridHeader(htmlOrTemplate[0], htmlOrTemplate[1] || {}));
+        break;
+      case 'mailgun':
+        typeof htmlOrTemplate === 'string'
+          ? (data['html'] = htmlOrTemplate)
+          : ((data['template'] = htmlOrTemplate[0]),
+            (data['h:X-Mailgun-Variables'] = JSON.stringify(htmlOrTemplate[1])));
+      default:
+        break;
+    }
+
+    await this.transporter.sendMail(data);
+  }
 }
