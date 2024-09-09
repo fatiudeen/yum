@@ -114,7 +114,7 @@ export abstract class Repository<T> {
       this.model
         .create(data)
         .then((user) => {
-          resolve(user.toObject());
+          resolve(<DocType<T>>user.toObject());
         })
         .catch((e) => reject(e));
     });
