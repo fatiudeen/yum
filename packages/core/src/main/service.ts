@@ -53,6 +53,10 @@ export abstract class Service<T, R extends Repository<T>> {
     return this.repository.count(query);
   }
 
+  save(query: Partial<DocType<T>>) {
+    return this.repository.update(query.id!, query);
+  }
+
   protected paginatedFind(query?: Partial<T & { page?: number | string; limit?: number | string }>) {
     return new Promise<{
       data: DocType<T>[];
